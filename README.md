@@ -23,14 +23,12 @@ GeRelion prefers NVIDIA GPUs with arch_sm equals 3.5 or prior.
 2. Software requirements
 The CUDA Toolkit must be installed successfully. In addition,
 the thrust library and [MPI](https://www.open-mpi.org/) pragraming interface should be installed. 
-
-The thiry party library fftw and fltk is required, both of them are put int the folder "external".
+3. The thiry party library fftw and fltk is required, both of them are put int the folder _external_.
  
 ## Compiling the GeRelion
 -------------------------
 1. Change the directory of your project in Makefile, check line 1.
-
-CUDA_DIR := path to your cuda directory installed (such as /usr/local/cuda-7.5) 
+   CUDA_DIR := path to your cuda directory installed (such as /usr/local/cuda-7.5) 
 
 2. Move to your GeRelion project folder and run the script _INSTALL.sh_.
 The compilation will last for several minites due to the usage of thrust library. 
@@ -45,7 +43,7 @@ You can download the [TRPV1 dataset](https://www.ebi.ac.uk/pdbe/emdb/empiar/entr
 
 The following command is a example of runnning GeRelion on two nodes(node01 and node02), each one with 4 K40 GPUs, GERELION_HOME is the directory of your GeRelion project:
 
-mpirun --np 9 --host node01,node02 $GERELION_HOME/build/gereline_refine_mpi --o Class3D_OPT/run8 --i particles_autopick_sort_class2d.star --particle_diameter 200 --angpix 3.54 --ref 3i3e_lp50A.mrc --firstiter_cc --ini_high 50 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 2 --K 4 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 3 --offset_step 2 --sym C1 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1
+mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi --o Class3D_OPT/run8 --i particles_autopick_sort_class2d.star --particle_diameter 200 --angpix 3.54 --ref 3i3e_lp50A.mrc --firstiter_cc --ini_high 50 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 2 --K 4 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 3 --offset_step 2 --sym C1 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1
 
 
 ## License

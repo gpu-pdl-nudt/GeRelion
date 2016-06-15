@@ -17,6 +17,11 @@
  * source code. Additional authorship citations may be added, but existing
  * author citations must be preserved.
  ***************************************************************************/
+ /***************************************************************************
+ * Modified by Huayou SU, who adds the GPU realted variables and functions 
+ * for GeRelion. The GPU variables are suffixed with "_D" and the GPU functions
+ * are suffixed with "_gpu"
+ ***************************************************************************/
 #ifndef __PROJECTOR_H
 #define __PROJECTOR_H
 

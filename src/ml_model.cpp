@@ -17,6 +17,11 @@
  * source code. Additional authorship citations may be added, but existing
  * author citations must be preserved.
  ***************************************************************************/
+ /***************************************************************************
+  * Modified by Huayou SU, who adds the GPU realted function call  
+  * for GeRelion. The  GPU functions are suffixed with "_gpu"
+  ***************************************************************************/
+  
 
 #include "src/ml_model.h"
 

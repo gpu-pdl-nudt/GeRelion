@@ -1,7 +1,13 @@
 /***************************************************************************
  *
- * Author: "Huayou SU"
- * PDL of NUDT
+ * Author : "Huayou SU, Wen WEN, Xiaoli DU, Dongsheng LI"
+ * Parallel and Distributed Processing Laboratory of NUDT
+ * Author : "Maofu LIAO"
+ * Department of Cell Biology, Harvard Medical School
+ *
+ * This file is GPU host program of GeRelio, which invoke 
+ * the kernels to accelerate the expectation. The functions with suffix "_gpu"
+ * and simular to their CPU implementaion of file Ml_optimiser.cpp
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +23,7 @@
  * source code. Additional authorship citations may be added, but existing
  * author citations must be preserved.
  ***************************************************************************/
+
 
 #include "src/ml_optimiser.h"
 #include "src/math_function.h"

@@ -1,7 +1,9 @@
 /***************************************************************************
  *
- * Author: "Huayou SU"
- * PDL of NUDT
+ * Author : "Huayou SU, Wen WEN, Xiaoli DU, Dongsheng LI"
+ * Parallel and Distributed Processing Laboratory of NUDT
+ * Author : "Maofu LIAO"
+ * Department of Cell Biology, Harvard Medical School
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +19,7 @@
  * source code. Additional authorship citations may be added, but existing
  * author citations must be preserved.
  ***************************************************************************/
+
 
 
 #ifndef MATH_FUNCTIONS_H

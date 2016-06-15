@@ -17,6 +17,14 @@
  * source code. Additional authorship citations may be added, but existing
  * author citations must be preserved.
  ***************************************************************************/
+
+   /***************************************************************************
+ * Modified by Huayou SU, who adds code for GPU inititalization,
+ * the GPU realted variables and functions for GeRelion. 
+ * The GPU variables are suffixed with "_D" and the GPU functions
+ * are suffixed with "_gpu"
+ ****************************************************************************/
+ 
 #include <mpi.h>
 #include "src/ml_optimiser_mpi.h"
 #include "src/ml_optimiser.h"

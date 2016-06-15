@@ -1,7 +1,14 @@
 /***************************************************************************
  *
- * Author: "Huayou SU"
- * PDL of NUDT
+ * Author : "Huayou SU, Wen WEN, Xiaoli DU, Dongsheng LI"
+ * Parallel and Distributed Processing Laboratory of NUDT
+ * Author : "Maofu LIAO"
+ * Department of Cell Biology, Harvard Medical School
+ *
+ * This file is the GPU program for backproject, 
+ * including the kernels and host side program.
+ * We implemented the key function  reconstruct with GPU, named reconstruct_gpu.
+ * Some of the data structure and aux functions are from Relion
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

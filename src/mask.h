@@ -18,6 +18,12 @@
  * author citations must be preserved.
  ***************************************************************************/
 
+  /***************************************************************************
+* Modified by Huayou SU, who adds the GPU realted variables and functions 
+* for GeRelion. The GPU variables are suffixed with "_D" and the GPU functions
+* are suffixed with "_gpu"
+ ***************************************************************************/
+
 #ifndef MASK_H_
 #define MASK_H_
 

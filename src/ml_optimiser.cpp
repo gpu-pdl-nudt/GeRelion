@@ -17,6 +17,10 @@
  * source code. Additional authorship citations may be added, but existing
  * author citations must be preserved.
  ***************************************************************************/
+  /***************************************************************************
+ * Modified by Huayou SU, who adds executation path for GeRelion, 
+ * the GPU functions are suffixed with "_gpu"
+ ***************************************************************************/
 #include "src/ml_optimiser.h"
 //#define DEBUG
 //#define DEBUG_CHECKSIZES

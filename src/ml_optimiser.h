@@ -18,6 +18,12 @@
  * author citations must be preserved.
  ***************************************************************************/
 
+ /***************************************************************************
+* Modified by Huayou SU, who adds the GPU realted variables and functions 
+* for GeRelion. The GPU variables are suffixed with "_D" and the GPU functions
+* are suffixed with "_gpu"
+ ***************************************************************************/
+
 #ifndef ML_OPTIMISER_H_
 #define ML_OPTIMISER_H_
 
@@ -435,7 +441,7 @@ public:
 	MultidimArray<double> exp_metadata, exp_imagedata;
 	double exp_thisparticle_sumweight;
 
-	//GPU memory space
+	//GPU memory space added by Huayou SU.
 	double* image_D;  //Store the image data for
 	double* rec_image_D;//
 	double* exp_Mweight_D;//Store the weight for each orientation and each class of each image

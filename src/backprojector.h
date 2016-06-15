@@ -1,7 +1,7 @@
 /***************************************************************************
  *
- * Author: "Huayou SU"
- * PDL of NUDT
+ * Author: "Sjors H.W. Scheres"
+ * MRC Laboratory of Molecular Biology
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,11 @@
  * author citations must be preserved.
  ***************************************************************************/
 
+/***************************************************************************
+ * Modified by Huayou SU, who adds the GPU realted variables and GPU functions 
+ * for GeRelion. The GPU variables are suffixed with "_D" and the GPU functions
+ * are suffixed with "_gpu"
+ ***************************************************************************/
 
 #ifndef BACKPROJECTOR_H_
 #define BACKPROJECTOR_H_

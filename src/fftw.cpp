@@ -42,6 +42,11 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+ 
+ /***************************************************************************
+ * Modified by Huayou SU, who adds the codes for initialization and destory
+ * GPU realted variables of GeRelion. The GPU variables are suffixed with "_D".
+ ***************************************************************************/
 
 #include "src/fftw.h"
 #include "src/args.h"
