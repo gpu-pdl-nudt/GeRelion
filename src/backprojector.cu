@@ -834,9 +834,9 @@ void BackProjector::reconstruct_gpu(MultidimArray<double>& vol_out,
 	cufftResult fftplan1, fftplan2;
 	size_t free, total;
 	cudaMemGetInfo(&free,  &total);
-	std::cout << "GPU memory info total 1 " << total / (1024 * 1024) << "MB  free  memory " << free / (1024 * 1024) << " MB "  << std::endl;
+	//std::cout << "GPU memory info total 1 " << total / (1024 * 1024) << "MB  free  memory " << free / (1024 * 1024) << " MB "  << std::endl;
 
-	std::cout << "The fft plan size is " << pad_size* pad_size* (ref_dim == 2 ? 1 : pad_size) << " paded " << pad_size << std::endl;
+	//std::cout << "The fft plan size is " << pad_size* pad_size* (ref_dim == 2 ? 1 : pad_size) << " paded " << pad_size << std::endl;
 	fftplan1 = cufftPlan3d(&fPlanBackward_gpu ,  pad_size, pad_size, (ref_dim == 2 ? 1 : pad_size), CUFFT_Z2D);
 	if (fPlanBackward_gpu == NULL)
 	{
