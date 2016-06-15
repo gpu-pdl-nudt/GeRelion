@@ -32,10 +32,12 @@ the thrust library and [MPI](https://www.open-mpi.org/) pragraming interface sho
 
 2. Move to your GeRelion project folder and run the script _INSTALL.sh_.
 The compilation will last for several minites due to the usage of thrust library. 
-The executable binary file will be put in the bin directory of the project. 
+The executable binary file will be put in  _bin_ directory of the project. 
 
 ## Running GeRelion
 -------------------
+Before running the program, you may need to export the environment variable *_LD_LIBRARY_PATH_* to 
+your lib directory, such as *export* *LD_LIBRARY_PAYH=$GERELION_HOME/lib:$LD_LIBRARY_PATH*
 The current version only support the command line mode. The basic parameter of GeRelion
 is almost the same of Relion except of adding one parameter _--mode_. 
 Parameter "--mode" indicates using the CPU mode or GPU mode. 0 is for CPU, 1 is for GPU mode.
