@@ -63,15 +63,15 @@ A step-by-step instruction to test GeRelion using the TRPV1 data set:
 3. Download this star file [tv1.star](https://1drv.ms/f/s!AnzI0m5_no6OgTo_1Mi-NFKgnZTm).
 4. The following commands assume that you have 2 GPU nodes (¡°node01¡± and ¡°node02¡±), each containing 4 GPU cards. ¡°$GERELION_HOME¡± should be replaced by the actual path of your GeRelion directory. 
 
-__Run the following command for 3D auto-refine (with C4 symmetry):__
+__Run the following command for 3D auto-refine (with C4 symmetry):__  
 mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi 
 --o REF01 --auto_refine --split_random_halves --i tv1.star --particle_diameter 200 --angpix 1.2156 --ref tv1.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --auto_local_healpix_order 4 --offset_range 5 --offset_step 2 --sym C4 --low_resol_join_halves 40 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1 
 
-__Run the following command for 3D classification (3 classes, without symmetry):__
+__Run the following command for 3D classification (3 classes, without symmetry):__  
 mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi 
 --o CLS01 --i tv1.star --particle_diameter 200 --angpix 1.2156 --ref tv1.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 4 --K 3 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 5 --offset_step 2 --sym C1 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1
 
-If you only have one node with 4 GPU cards, the commands are:
+__If you only have one node with 4 GPU cards, the commands are:__  
 mpirun --np 5 $GERELION_HOME/bin/gereline_refine_mpi ... ...
 
 ## License
