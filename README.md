@@ -63,28 +63,16 @@ A step-by-step instruction to test GeRelion using the TRPV1 data set:
 3. Download this star file [tv1.star](https://1drv.ms/f/s!AnzI0m5_no6OgTo_1Mi-NFKgnZTm).
 4. The following commands assume that you have 2 GPU nodes (¡°node01¡± and ¡°node02¡±), each containing 4 GPU cards. ¡°$GERELION_HOME¡± should be replaced by the actual path of your GeRelion directory. 
 
-Run the following command for 3D auto-refine (with C4 symmetry):
+__Run the following command for 3D auto-refine (with C4 symmetry):__
 mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi 
 --o REF01 --auto_refine --split_random_halves --i tv1.star --particle_diameter 200 --angpix 1.2156 --ref tv1.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --auto_local_healpix_order 4 --offset_range 5 --offset_step 2 --sym C4 --low_resol_join_halves 40 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1 
 
-Run the following command for 3D classification (3 classes, without symmetry):
+__Run the following command for 3D classification (3 classes, without symmetry):__
 mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi 
 --o CLS01 --i tv1.star --particle_diameter 200 --angpix 1.2156 --ref tv1.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 4 --K 3 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 5 --offset_step 2 --sym C1 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1
 
 If you only have one node with 4 GPU cards, the commands are:
-mpirun --np 5 $GERELION_HOME/bin/gereline_refine_mpi ¡­ ¡­
-
-Before running the program, you may need to export the environment variable *_LD_LIBRARY_PATH_* to 
-your lib directory, such as *export* *LD_LIBRARY_PAYH=$GERELION_HOME/lib:$LD_LIBRARY_PATH*
-
-The current version only support the command line mode. The basic parameter of GeRelion
-is almost the same of Relion except of adding one parameter _--mode_. 
-Parameter "--mode" indicates using the CPU mode or GPU mode. 0 is for CPU, 1 is for GPU mode.
-You can download the [TRPV1 dataset](https://www.ebi.ac.uk/pdbe/emdb/empiar/entry/10005/)
-
-The following command is a example of runnning GeRelion on two nodes(node01 and node02), each one with 4 K40 GPUs, GERELION_HOME is the directory of your GeRelion project:
-
-mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi --o Class3D_OPT/run --i new_DFMerge_20.star --particle_diameter 160 --angpix 1.2156 --ref EMD-5778.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 4 --K 3 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 5 --offset_step 2 --sym C1 --norm --scale --j 1 --memory_per_thread 8 --dont_combine_weights_via_disc --mode 1
+mpirun --np 5 $GERELION_HOME/bin/gereline_refine_mpi ... ...
 
 ## License
 ----------
