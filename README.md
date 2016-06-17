@@ -34,8 +34,46 @@ the thrust library and [MPI](https://www.open-mpi.org/) pragraming interface sho
 The compilation will last for several minites due to the usage of thrust library. 
 The executable binary file will be put in  _bin_ directory of the project. 
 
+## Edit the environment file 
+-------------------
+
+Replace ¡°$GERELION_HOME¡± with the actual path of your GeRelion directory.
+If csh or tcsh, add the following lines to your ~/.cshrc. 
+
+export LD_LIBRARY_PATH=$GERELION_HOME/lib:$LD_LIBRARY_PATH
+export PATH=$GERELION_HOME/bin:$PATH
+
+If bash, add the following lines to your ~/.bashrc:
+
+setenv LD_LIBRARY_PATH $GERELION_HOME/lib:$LD_LIBRARY_PATH
+setenv PATH $GERELION_HOME/bin:$PATH
+
+
 ## Running GeRelion
 -------------------
+
+The current version of GeRelion only supports job submission via command line (GUI will be implemented soon). GeRelion uses the same parameters as RELION, so you can use RELION GUI ¡°print command¡± to get all the necessary parameters.
+
+One GeRelion-specific parameter (--mode) is used to indicate running mode of GeRelion: 0 for CPU, and 1 for GPU. 
+
+A step-by-step instruction to test GeRelion using the TRPV1 data set:
+
+1. Download the TRPV1 particle stack [tv1_f01-30.mrc]( https://www.ebi.ac.uk/pdbe/emdb/empiar/entry/10005/), and rename it as ¡°tv1.mrcs¡±.
+2. Download the TRPV1 3D reconstruction [emd_5778.map](http://emsearch.rutgers.edu/atlas/5778_downloads.html), and rename it as ¡°tv1.mrc¡±
+3. Download this star file [tv1.star](https://1drv.ms/f/s!AnzI0m5_no6OgTo_1Mi-NFKgnZTm).
+4. The following commands assume that you have 2 GPU nodes (¡°node01¡± and ¡°node02¡±), each containing 4 GPU cards. ¡°$GERELION_HOME¡± should be replaced by the actual path of your GeRelion directory. 
+
+Run the following command for 3D auto-refine (with C4 symmetry):
+mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi 
+--o REF01 --auto_refine --split_random_halves --i tv1.star --particle_diameter 200 --angpix 1.2156 --ref tv1.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --auto_local_healpix_order 4 --offset_range 5 --offset_step 2 --sym C4 --low_resol_join_halves 40 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1 
+
+Run the following command for 3D classification (3 classes, without symmetry):
+mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi 
+--o CLS01 --i tv1.star --particle_diameter 200 --angpix 1.2156 --ref tv1.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 4 --K 3 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 5 --offset_step 2 --sym C1 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1
+
+If you only have one node with 4 GPU cards, the commands are:
+mpirun --np 5 $GERELION_HOME/bin/gereline_refine_mpi ¡­ ¡­
+
 Before running the program, you may need to export the environment variable *_LD_LIBRARY_PATH_* to 
 your lib directory, such as *export* *LD_LIBRARY_PAYH=$GERELION_HOME/lib:$LD_LIBRARY_PATH*
 
@@ -46,8 +84,7 @@ You can download the [TRPV1 dataset](https://www.ebi.ac.uk/pdbe/emdb/empiar/entr
 
 The following command is a example of runnning GeRelion on two nodes(node01 and node02), each one with 4 K40 GPUs, GERELION_HOME is the directory of your GeRelion project:
 
-mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi --o Class3D_OPT/run8 --i particles_autopick_sort_class2d.star --particle_diameter 200 --angpix 3.54 --ref 3i3e_lp50A.mrc --firstiter_cc --ini_high 50 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 2 --K 4 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 3 --offset_step 2 --sym C1 --norm --scale  --j 1 --memory_per_thread 4 --dont_combine_weights_via_disc --mode 1
-
+mpirun --np 9 --host node01,node02 $GERELION_HOME/bin/gereline_refine_mpi --o Class3D_OPT/run --i new_DFMerge_20.star --particle_diameter 160 --angpix 1.2156 --ref EMD-5778.mrc --firstiter_cc --ini_high 60 --ctf --ctf_corrected_ref --iter 25 --tau2_fudge 4 --K 3 --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --offset_range 5 --offset_step 2 --sym C1 --norm --scale --j 1 --memory_per_thread 8 --dont_combine_weights_via_disc --mode 1
 
 ## License
 ----------
