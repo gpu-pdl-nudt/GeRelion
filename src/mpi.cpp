@@ -211,7 +211,7 @@ void printMpiNodesMachineNames(MpiNode &node, int nthreads)
 
     if (node.isMaster())
     {
-    	std::cout << " === RELION MPI setup ===" << std::endl;
+    	std::cout << " === GERELION MPI setup ===" << std::endl;
     	std::cout << " + Number of MPI processes             = " << node.size << std::endl;
     	if (nthreads > 1)
     	{

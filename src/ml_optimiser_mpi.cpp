@@ -1184,12 +1184,13 @@ void MlOptimiserMpi::maximization()
 					                                         mymodel.data_vs_prior_class[iclass], mymodel.fsc_halves_class[iclass], wsum_model.pdf_class[iclass],
 					                                         do_split_random_halves, (do_join_random_halves || do_always_join_random_halves), nr_threads, minres_map);
 				}
+				// Also perform the unregularized reconstruction
+				if (do_auto_refine && has_converged)
+				{
+					readTemporaryDataAndWeightArraysAndReconstruct(iclass, 1);
+				}
 			}
-			// Also perform the unregularized reconstruction
-			if (do_auto_refine && has_converged)
-			{
-				readTemporaryDataAndWeightArraysAndReconstruct(iclass, 1);
-			}
+			
 
 			//std::cerr << " size01 " <<  MULTIDIM_SIZE(mymodel.Iref[0]) << " rank= "<<node->rank << " iclass= "<<iclass << std::endl;
 			// In some cases there is not enough memory to reconstruct two random halves in parallel
