@@ -152,10 +152,10 @@ MetaDataTable Experiment::getMetaDataMicrograph(long int part_id, int inseries_n
 	return result;
 }
 
-Matrix2D<double> Experiment::getMicrographTransformationMatrix(long int micrograph_id)
+Matrix2D<DOUBLE> Experiment::getMicrographTransformationMatrix(long int micrograph_id)
 {
 
-	Matrix2D<double> R(3,3);
+	Matrix2D<DOUBLE> R(3,3);
 
 	if (MDmic.containsLabel(EMDL_MATRIX_1_1))
 	{
@@ -188,7 +188,7 @@ Matrix2D<double> Experiment::getMicrographTransformationMatrix(long int microgra
 	}
 #endif
 
-	double tiltdir, tiltangle, outofplane;
+	DOUBLE tiltdir, tiltangle, outofplane;
 		MDmic.getValue(EMDL_MICROGRAPH_TILT_ANGLE, tiltangle, micrograph_id);
 		// By default tiltdir = 0
 		if (!MDmic.getValue(EMDL_MICROGRAPH_TILT_AXIS_DIRECTION, tiltdir, micrograph_id))
@@ -199,7 +199,7 @@ Matrix2D<double> Experiment::getMicrographTransformationMatrix(long int microgra
 
 		// Transformation matrix
 		// Get the direction of the tilt axis as a Matrix1D
-		Matrix1D<double> dir_axis(3);
+		Matrix1D<DOUBLE> dir_axis(3);
 		Euler_angles2direction(tiltdir, outofplane, dir_axis);
 		// Calculate the corresponding 3D rotation matrix
 		rotation3DMatrix(tiltangle, dir_axis, R, false);
@@ -214,7 +214,7 @@ Matrix2D<double> Experiment::getMicrographTransformationMatrix(long int microgra
 	return R;
 }
 
-Matrix2D<double> Experiment::getMicrographTransformationMatrix(long int part_id, int inseries_no)
+Matrix2D<DOUBLE> Experiment::getMicrographTransformationMatrix(long int part_id, int inseries_no)
 {
 	long int mic_id = getMicrographId(part_id, inseries_no);
 	return getMicrographTransformationMatrix(mic_id);
@@ -511,7 +511,7 @@ void Experiment::expandToMovieFrames(FileName fn_data_movie)
 	{
 		long int group_id, mic_id, part_id, image_id;
 		int my_random_subset, my_class;
-		double rot, tilt, psi, xoff, yoff;
+		DOUBLE rot, tilt, psi, xoff, yoff;
 		FileName fn_movie_part, fn_curr_img, group_name;
 		MDmovie.getValue(EMDL_PARTICLE_NAME, fn_movie_part);
 
@@ -608,7 +608,7 @@ void Experiment::expandToMovieFrames(FileName fn_data_movie)
 			Exp_movie.MDimg.setValue(EMDL_PARTICLE_CLASS, my_class, image_id);
 			Exp_movie.MDimg.setValue(EMDL_PARTICLE_RANDOM_SUBSET, my_random_subset, image_id);
 			// Set normcorrection to 1
-			double norm = 1.;
+			DOUBLE norm = 1.;
 			Exp_movie.MDimg.setValue(EMDL_IMAGE_NORM_CORRECTION, norm);
 
 			// Get the rlnParticleName and set this into rlnOriginalParticleName to prevent re-reading of this file to be handled differently..
@@ -765,7 +765,7 @@ void Experiment::read(FileName fn_exp, bool do_ignore_particle_name)
 			REPORT_ERROR("Experiment::read: ERROR: MRC stacks of 2D images should be have extension .mrcs, not .mrc!");
 
 		// Read in header-only information to get the NSIZE of the stack
-		Image<double> img;
+		Image<DOUBLE> img;
 		img.read(fn_exp, false); // false means skip data, only read header
 
 		for (long int n = 0; n <  NSIZE(img()); n++)
@@ -819,7 +819,7 @@ void Experiment::read(FileName fn_exp, bool do_ignore_particle_name)
 #ifdef DEBUG_READ
 		std::cerr << " sizeof(int)= " << sizeof(int) << std::endl;
 		std::cerr << " sizeof(long int)= " << sizeof(long int) << std::endl;
-		std::cerr << " sizeof(double)= " << sizeof(double) << std::endl;
+		std::cerr << " sizeof(DOUBLE)= " << sizeof(DOUBLE) << std::endl;
 		std::cerr << " sizeof(ExpImage)= " << sizeof(ExpImage) << std::endl;
 		std::cerr << " sizeof(ExpParticle)= " << sizeof(ExpParticle) << std::endl;
 		std::cerr << " sizeof(ExpMicrograph)= " << sizeof(ExpMicrograph) << std::endl;
@@ -1033,7 +1033,7 @@ void Experiment::read(FileName fn_exp, bool do_ignore_particle_name)
 	bool have_norm = MDimgin.containsLabel(EMDL_IMAGE_NORM_CORRECTION);
 	FOR_ALL_OBJECTS_IN_METADATA_TABLE(MDimg)
 	{
-		double dzero=0., done=1.;
+		DOUBLE dzero=0., done=1.;
 		int izero = 0;
 		if (!have_rot)
 			MDimg.setValue(EMDL_ORIENT_ROT, dzero);
@@ -1041,8 +1041,13 @@ void Experiment::read(FileName fn_exp, bool do_ignore_particle_name)
 			MDimg.setValue(EMDL_ORIENT_TILT, dzero);
 		if (!have_psi)
 			MDimg.setValue(EMDL_ORIENT_PSI, dzero);
-		if (!have_xoff)
+		if (!have_xoff){
 			MDimg.setValue(EMDL_ORIENT_ORIGIN_X, dzero);
+		       /*std::cout <<" set  EMDL_ORIENT_ORIGIN_X = " <<dzero << std::endl;
+			DOUBLE aux;
+			MDimg.getValue(EMDL_ORIENT_ORIGIN_X, aux);
+			std::cout <<" get  MDimg EMDL_ORIENT_ORIGIN_X  aux= " <<aux << std::endl;*/
+			}
 		if (!have_yoff)
 			MDimg.setValue(EMDL_ORIENT_ORIGIN_Y, dzero);
 		if (!have_clas)
@@ -1059,7 +1064,7 @@ void Experiment::read(FileName fn_exp, bool do_ignore_particle_name)
 
 	// Also set the image_size (use the last image for that, still in fn_img)
 	FileName fn_img;
-	Image<double> img;
+	Image<DOUBLE> img;
 	MDimg.getValue(EMDL_IMAGE_NAME, fn_img, MDimg.firstObject());
 	if (fn_img != "")
 	{

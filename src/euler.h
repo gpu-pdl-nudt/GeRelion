@@ -66,7 +66,7 @@
  * See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/EulerAngles for a
  * description of the Euler angles.
  */
-void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A,
+void Euler_angles2matrix(DOUBLE a, DOUBLE b, DOUBLE g, Matrix2D< DOUBLE >& A,
                          bool homogeneous=false);
 
 /** Euler angles2direction
@@ -74,18 +74,18 @@ void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A,
  * This function returns  a vector parallel to the  projection direction.
  * Resizes v if needed
  */
-void Euler_angles2direction(double alpha,
-						 double beta,
-						 Matrix1D< double >& v);
+void Euler_angles2direction(DOUBLE alpha,
+						 DOUBLE beta,
+						 Matrix1D< DOUBLE >& v);
 
 /** Euler direction2angles
  *
  * This function returns the 2 Euler angles (rot&tilt) associated to the direction given by
  * the vector v.
  */
-void Euler_direction2angles(Matrix1D< double >& v,
-                            double& alpha,
-                            double& beta);
+void Euler_direction2angles(Matrix1D< DOUBLE >& v,
+                            DOUBLE& alpha,
+                            DOUBLE& beta);
 
 /** "Euler" matrix --> angles
  *
@@ -101,10 +101,10 @@ void Euler_direction2angles(Matrix1D< double >& v,
  * Euler_matrix2angles(Euler, alpha, beta, gamma);
  * @endcode
  */
-void Euler_matrix2angles(const Matrix2D< double >& A,
-                         double& alpha,
-                         double& beta,
-                         double& gamma);
+void Euler_matrix2angles(const Matrix2D< DOUBLE >& A,
+                         DOUBLE& alpha,
+                         DOUBLE& beta,
+                         DOUBLE& gamma);
 
 /** Up-Down projection equivalence
  *
@@ -127,12 +127,12 @@ void Euler_matrix2angles(const Matrix2D< double >& A,
  * Euler_up_down(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_up_down(double rot,
-                   double tilt,
-                   double psi,
-                   double& newrot,
-                   double& newtilt,
-                   double& newpsi);
+void Euler_up_down(DOUBLE rot,
+                   DOUBLE tilt,
+                   DOUBLE psi,
+                   DOUBLE& newrot,
+                   DOUBLE& newtilt,
+                   DOUBLE& newpsi);
 
 /** The same view but differently expressed
  *
@@ -150,12 +150,12 @@ void Euler_up_down(double rot,
  * Euler_another_set(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_another_set(double rot,
-                       double tilt,
-                       double psi,
-                       double& newrot,
-                       double& newtilt,
-                       double& newpsi);
+void Euler_another_set(DOUBLE rot,
+                       DOUBLE tilt,
+                       DOUBLE psi,
+                       DOUBLE& newrot,
+                       DOUBLE& newtilt,
+                       DOUBLE& newpsi);
 
 /** Mirror over Y axis
  *
@@ -183,12 +183,12 @@ void Euler_another_set(double rot,
  * Euler_mirrorY(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_mirrorY(double rot,
-                   double tilt,
-                   double psi,
-                   double& newrot,
-                   double& newtilt,
-                   double& newpsi);
+void Euler_mirrorY(DOUBLE rot,
+                   DOUBLE tilt,
+                   DOUBLE psi,
+                   DOUBLE& newrot,
+                   DOUBLE& newtilt,
+                   DOUBLE& newpsi);
 
 /** Mirror over X axis
  *
@@ -216,12 +216,12 @@ void Euler_mirrorY(double rot,
  * Euler_mirrorX(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_mirrorX(double rot,
-                   double tilt,
-                   double psi,
-                   double& newrot,
-                   double& newtilt,
-                   double& newpsi);
+void Euler_mirrorX(DOUBLE rot,
+                   DOUBLE tilt,
+                   DOUBLE psi,
+                   DOUBLE& newrot,
+                   DOUBLE& newtilt,
+                   DOUBLE& newpsi);
 
 /** Mirror over X and Y axes
  *
@@ -250,12 +250,12 @@ void Euler_mirrorX(double rot,
  * Euler_mirrorX(rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_mirrorXY(double rot,
-                    double tilt,
-                    double psi,
-                    double& newrot,
-                    double& newtilt,
-                    double& newpsi);
+void Euler_mirrorXY(DOUBLE rot,
+                    DOUBLE tilt,
+                    DOUBLE psi,
+                    DOUBLE& newrot,
+                    DOUBLE& newtilt,
+                    DOUBLE& newpsi);
 
 /** Apply a geometrical transformation
  *
@@ -277,21 +277,21 @@ void Euler_mirrorXY(double rot,
  * system.
  *
  * @code
- * Matrix2D< double > R60 = rotation3DMatrix(60, 'Z');
+ * Matrix2D< DOUBLE > R60 = rotation3DMatrix(60, 'Z');
  * R60.resize(3, 3); // Get rid of homogeneous part
- * Matrix2D< double > I(3, 3);
+ * Matrix2D< DOUBLE > I(3, 3);
  * I.initIdentity();
  * Euler_apply_transf(I, R60, rot, tilt, psi, newrot, newtilt, newpsi);
  * @endcode
  */
-void Euler_apply_transf(const Matrix2D< double >& L,
-                        const Matrix2D< double >& R,
-                        double rot,
-                        double tilt,
-                        double psi,
-                        double& newrot,
-                        double& newtilt,
-                        double& newpsi);
+void Euler_apply_transf(const Matrix2D< DOUBLE >& L,
+                        const Matrix2D< DOUBLE >& R,
+                        DOUBLE rot,
+                        DOUBLE tilt,
+                        DOUBLE psi,
+                        DOUBLE& newrot,
+                        DOUBLE& newtilt,
+                        DOUBLE& newpsi);
 
 /** 3D Rotation matrix after 3 Euler angles
  *
@@ -303,8 +303,8 @@ void Euler_apply_transf(const Matrix2D< double >& L,
  * Matrix2D< float > euler = Euler_rotation3DMatrix(60, 30, 60);
  * @endcode
  */
-void Euler_rotation3DMatrix(double rot, double tilt, double psi,
-                            Matrix2D<double> &result);
+void Euler_rotation3DMatrix(DOUBLE rot, DOUBLE tilt, DOUBLE psi,
+                            Matrix2D<DOUBLE> &result);
 
 //@}
 

@@ -20,7 +20,7 @@
 #include "src/complex.h"
 
 // Constructor with two arguments
-Complex::Complex(double _r, double _i)
+Complex::Complex(DOUBLE _r, DOUBLE _i)
 {
     real = _r;
     imag = _i;
@@ -52,31 +52,31 @@ Complex Complex::operator* (Complex &op)
     return Complex((real * op.real) - (imag * op.imag), (real * op.imag) + (imag * op.real));
 }
 
-Complex Complex::operator* (double op)
+Complex Complex::operator* (DOUBLE op)
 {
     return Complex(real*op, imag*op);
 }
 
-void Complex::operator*= (double op)
+void Complex::operator*= (DOUBLE op)
 {
 	real *= op;
 	imag *= op;
 }
 
-Complex Complex::operator/(double op)
+Complex Complex::operator/(DOUBLE op)
 {
     return Complex(real/op, imag/op);
 }
 
 Complex Complex::operator/(Complex &op)
 {
-    double cd = op.norm();
-    double realval = real*op.real + imag*op.imag;
-    double imagval = imag*op.real - real*op.imag;
+    DOUBLE cd = op.norm();
+    DOUBLE realval = real*op.real + imag*op.imag;
+    DOUBLE imagval = imag*op.real - real*op.imag;
 	return Complex(realval/cd, imagval/cd);
 }
 
-void Complex::operator/=(double op)
+void Complex::operator/=(DOUBLE op)
 {
 	real /= op;
 	imag /= op;
@@ -99,17 +99,17 @@ Complex operator*(const Complex& lhs, const Complex& rhs)
 	return Complex((lhs.real * rhs.real) - (lhs.imag * rhs.imag), (lhs.real * rhs.imag) + (lhs.imag * rhs.real));
 }
 
-Complex operator*(const Complex& lhs, const double& val)
+Complex operator*(const Complex& lhs, const DOUBLE& val)
 {
 	return Complex(lhs.real * val , lhs.imag * val);
 }
 
-Complex operator*(const double& val, const Complex& rhs)
+Complex operator*(const DOUBLE& val, const Complex& rhs)
 {
 	return Complex(rhs.real * val , rhs.imag * val);
 }
 
-Complex operator/(const Complex& lhs, const double& val)
+Complex operator/(const Complex& lhs, const DOUBLE& val)
 {
 	return Complex(lhs.real / val , lhs.imag / val);
 }
@@ -135,30 +135,30 @@ Complex conj(const Complex& op)
 }
 
 
-double Complex::abs()
+DOUBLE Complex::abs()
 {
     return sqrt(real*real + imag*imag);
 }
-double abs(const Complex& op)
+DOUBLE abs(const Complex& op)
 {
 	return sqrt(op.real*op.real + op.imag*op.imag);
 }
 
-double Complex::norm()
+DOUBLE Complex::norm()
 {
     return real*real + imag*imag;
 }
-double norm(const Complex& op)
+DOUBLE norm(const Complex& op)
 {
 	return op.real*op.real + op.imag*op.imag;
 }
 
-double Complex::arg()
+DOUBLE Complex::arg()
 {
     return atan2(imag, real);
 }
 
-double arg(const Complex& op)
+DOUBLE arg(const Complex& op)
 {
 	return atan2(op.imag, op.real);
 }

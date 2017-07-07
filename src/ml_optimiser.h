@@ -139,19 +139,20 @@ public:
 	bool fix_tau;
 
 	// some parameters for debugging
-	double debug1, debug2;
+	DOUBLE debug1, debug2;
 
 	// Starting and finishing particles (for parallelisation)
 	long int my_first_ori_particle_id, my_last_ori_particle_id;
 
 	// Total number iterations and current iteration
 	int iter, nr_iter;
+	int extra_iter;
 
 	// Flag whether to split data from the beginning into two random halves
 	bool do_split_random_halves;
 
 	// resolution (in Angstrom) to join the two random halves
-	double low_resol_join_halves;
+	DOUBLE low_resol_join_halves;
 
 	// Flag to join random halves again
 	bool do_join_random_halves;
@@ -193,7 +194,7 @@ public:
 	int nr_iter_wo_resol_gain;
 
 	// Best resolution obtained thus far
-	double best_resol_thus_far;
+	DOUBLE best_resol_thus_far;
 
 	// Is the FSC still high at the resolution limit?
 	bool has_high_fsc_at_limit;
@@ -205,22 +206,22 @@ public:
 	int autosampling_hporder_local_searches;
 
 	// Smallest changes thus far in the optimal translational offsets, orientations and classes
-	double smallest_changes_optimal_offsets;
-	double smallest_changes_optimal_orientations;
+	DOUBLE smallest_changes_optimal_offsets;
+	DOUBLE smallest_changes_optimal_orientations;
 	int smallest_changes_optimal_classes;
 
 	// Number of iterations without a decrease in OffsetChanges
 	int nr_iter_wo_large_hidden_variable_changes;
 
 	// Strict high-res limit in the expectation step
-	double strict_highres_exp;
+	DOUBLE strict_highres_exp;
 
 	// Flag to indicate to estimate angular accuracy until current_size (and not coarse_size) when restricting high-res limit in the expectation step
 	// This is used for testing purposes only
 	bool do_acc_currentsize_despite_highres_exp;
 
 	// Global parameters to store accuracy on rot and trans
-	double acc_rot, acc_trans;
+	DOUBLE acc_rot, acc_trans;
 
 	// Flag to indicate to use all data out to Nyquist
 	bool do_use_all_data;
@@ -244,7 +245,7 @@ public:
 	int max_coarse_size;
 
 	// Particle diameter (in Ang)
-	double particle_diameter;
+	DOUBLE particle_diameter;
 
 	// How many fourier shells should be included beyond the highest shell where evidenceVsPriorRatio < 1?
 	int incr_size;
@@ -269,7 +270,7 @@ public:
 	int nr_pool, max_nr_pool;
 
 	// Available memory (in Gigabyte)
-	double available_memory;
+	DOUBLE available_memory;
 
 	// Perform combination of weight through files written on disc
 	bool combine_weights_thru_disc;
@@ -299,7 +300,7 @@ public:
 	 * The closer to one, the more orientations will be oversampled
 	 * The default is 0.999.
 	 */
-	double adaptive_fraction;
+	DOUBLE adaptive_fraction;
 
 	// Seed for random number generator
 	int random_seed;
@@ -322,7 +323,7 @@ public:
 	bool do_always_cc;
 
 	// Initial low-pass filter for all references (in digital frequency)
-	double ini_high;
+	DOUBLE ini_high;
 
 	// Flag whether to generate seeds
 	// TODO: implement!
@@ -367,7 +368,7 @@ public:
 	FileName fn_sigma;
 
 	// Multiplicative fdge factor for the sigma estimates
-	double sigma2_fudge;
+	DOUBLE sigma2_fudge;
 
 	// Perform two reconstructions of random halves sequentially (to save memory for very big cases)
 	bool do_sequential_halves_recons;
@@ -380,21 +381,21 @@ public:
 
 	// Developmental: simulated annealing to get out of local minima...
 	bool do_sim_anneal;
-	double temperature, temp_ini, temp_fin;
+	DOUBLE temperature, temp_ini, temp_fin;
 
 	/////////// Keep track of hidden variable changes ////////////////////////
 
 	// Changes from one iteration to the next in the angles
-	double current_changes_optimal_orientations, sum_changes_optimal_orientations;
+	DOUBLE current_changes_optimal_orientations, sum_changes_optimal_orientations;
 
 	// Changes from one iteration to the next in the translations
-	double current_changes_optimal_offsets, sum_changes_optimal_offsets;
+	DOUBLE current_changes_optimal_offsets, sum_changes_optimal_offsets;
 
 	// Changes from one iteration to the next in the class assignments
-	double current_changes_optimal_classes, sum_changes_optimal_classes;
+	DOUBLE current_changes_optimal_classes, sum_changes_optimal_classes;
 
 	// Just count how often the optimal changes are summed
-	double sum_changes_count;
+	DOUBLE sum_changes_count;
 
 	/////////// Some internal stuff ////////////////////////
 
@@ -423,49 +424,56 @@ public:
 	/** Some global variables that are only for thread visibility */
 	/// Taken from getAllSquaredDifferences
 	std::vector<MultidimArray<Complex > > exp_Fimgs, exp_Fimgs_nomask, exp_local_Fimgs_shifted, exp_local_Fimgs_shifted_nomask;
-	std::vector<MultidimArray<double> > exp_Fctfs, exp_local_Fctfs, exp_local_Minvsigma2s;
-	Matrix2D<double> exp_R_mic;
+	std::vector<MultidimArray<DOUBLE> > exp_Fctfs, exp_local_Fctfs, exp_local_Minvsigma2s;
+	Matrix2D<DOUBLE> exp_R_mic;
 	int exp_iseries, exp_iclass, exp_ipass, exp_iimage, exp_ipart, exp_current_image_size, exp_current_oversampling, exp_nr_ori_particles, exp_nr_particles, exp_nr_images;
 	long int exp_nr_oversampled_rot, exp_nr_oversampled_trans, exp_nr_rot, exp_nr_dir, exp_nr_psi, exp_nr_trans;
 	long int exp_part_id, exp_my_first_ori_particle, exp_my_last_ori_particle;
 	std::vector<int> exp_starting_image_no;
 	std::vector<long int> exp_ipart_to_part_id, exp_ipart_to_ori_part_id, exp_ipart_to_ori_part_nframe, exp_iimg_to_ipart;
-	std::vector<double> exp_highres_Xi2_imgs, exp_min_diff2, exp_local_sqrtXi2, exp_local_oldcc;
-	MultidimArray<double> exp_Mweight;
+	std::vector<DOUBLE> exp_highres_Xi2_imgs, exp_min_diff2, exp_local_sqrtXi2, exp_local_oldcc, exp_highres_Xi2_imgs_red;
+	MultidimArray<DOUBLE> exp_Mweight;
 	MultidimArray<bool> exp_Mcoarse_significant;
 	// And from storeWeightedSums
-	std::vector<double> exp_sum_weight, exp_significant_weight, exp_max_weight;
-	std::vector<Matrix1D<double> > exp_old_offset, exp_prior;
-	std::vector<double> exp_wsum_norm_correction;
-	std::vector<MultidimArray<double> > exp_wsum_scale_correction_XA, exp_wsum_scale_correction_AA, exp_power_imgs;
-	MultidimArray<double> exp_metadata, exp_imagedata;
-	double exp_thisparticle_sumweight;
+	std::vector<DOUBLE> exp_sum_weight, exp_significant_weight, exp_max_weight;
+	std::vector<Matrix1D<DOUBLE> > exp_old_offset, exp_prior;
+	std::vector<DOUBLE> exp_wsum_norm_correction;
+	std::vector<MultidimArray<DOUBLE> > exp_wsum_scale_correction_XA, exp_wsum_scale_correction_AA, exp_power_imgs, exp_power_imgs_red;
+	MultidimArray<DOUBLE> exp_metadata, exp_imagedata;
+	DOUBLE exp_thisparticle_sumweight;
 
 	//GPU memory space added by Huayou SU.
-	double* image_D;  //Store the image data for
-	double* rec_image_D;//
-	double* exp_Mweight_D;//Store the weight for each orientation and each class of each image
+	DOUBLE* image_D;  //Store the image data for
+	DOUBLE* rec_image_D;//
+	DOUBLE* exp_Mweight_D;//Store the weight for each orientation and each class of each image
 	int exp_nr_images_para; // Number of images to be done in the GPU kernel
-	double* translated_matrix_D;//
-	cufftDoubleComplex* exp_Fimgs_D, *exp_Fimgs_nomask_D; //It should be complex type
-	cufftDoubleComplex* exp_local_Fimgs_shifted_D, *exp_local_Fimgs_shifted_nomask_D;
-	double* Fourier_D;
-	double* exp_local_Fctfs_D, *exp_Minvsigma2s_D, *exp_Fctf_D;
-	double* centerFFT_D;
-	double* translated_local_Matrixs;
-	double* exp_local_sqrtXi2_D;
+	DOUBLE* translated_matrix_D;//
+	CUFFT_COMPLEX * exp_Fimgs_D, *exp_Fimgs_nomask_D; //It should be complex type
+	CUFFT_COMPLEX * exp_local_Fimgs_shifted_D, *exp_local_Fimgs_shifted_nomask_D;
+	DOUBLE* Fourier_D;
+	DOUBLE* exp_local_Fctfs_D, *exp_Minvsigma2s_D, *exp_Fctf_D;
+	DOUBLE* centerFFT_D;
+	DOUBLE* translated_local_Matrixs;
+	DOUBLE* exp_local_sqrtXi2_D;
 	int exp_Mweight_D_size;
 
-	double* exp_min_diff2_D;
+	DOUBLE* exp_min_diff2_D;
 	float device_mem_G;
-	cufftDoubleComplex* project_data_D, *backproject_data_D;
-	double* backproject_Weight_D;
+	CUFFT_COMPLEX * project_data_D, *backproject_data_D;
+	//CUFFT_COMPLEX *project_red_data_D, *project_yellow_data_D;
+	DOUBLE* backproject_Weight_D;
 
 	int shift_img_x, shift_img_y, shift_img_z;
 	int shift_img_size;
-
+	
+	// yellow red mask mode
+	FileName fn_yellow_mask;
+	FileName fn_red_mask;
+	FileName fn_fsc_mask;
+	FileName fn_yellow_map;
+	bool sub_extract;
 	//TMP DEBUGGING
-	MultidimArray<double> DEBUGGING_COPY_exp_Mweight;
+	MultidimArray<DOUBLE> DEBUGGING_COPY_exp_Mweight;
 
 #ifdef TIMING
 	Timer timer;
@@ -511,13 +519,13 @@ public:
 	/* Calculates the sum of all individual power spectra and the average of all images for initial sigma_noise estimation
 	 * The rank is passed so that if one splits the data into random halves one can know which random half to treat
 	 */
-	void calculateSumOfPowerSpectraAndAverageImage(MultidimArray<double>& Mavg, bool myverb = true);
+	void calculateSumOfPowerSpectraAndAverageImage(MultidimArray<DOUBLE>& Mavg, bool myverb = true);
 
 	/** Use the sum of the individual power spectra to calculate their average and set this in sigma2_noise
 	 * Also subtract the power spectrum of the average images,
 	 * and if (do_average_unaligned) then also set Mavg to all Iref
 	 */
-	void setSigmaNoiseEstimatesAndSetAverageImage(MultidimArray<double>& Mavg);
+	void setSigmaNoiseEstimatesAndSetAverageImage(MultidimArray<DOUBLE>& Mavg);
 
 	/* Perform an initial low-pass filtering of the references
 	 * Note that because of the MAP estimation, this is not necessary inside the refinement
@@ -543,6 +551,7 @@ public:
 
 	/* Setup expectation step */
 	void expectationSetup();
+	void expectationSetup_gpu();
 
 	/* Check whether everything fits into memory, possibly adjust nr_pool and setup thread task managers */
 	void expectationSetupCheckMemory(bool myverb = true);
@@ -588,7 +597,7 @@ public:
 	/* Calculates the PDF of the in-plane translation
 	 * assuming a 2D (or 3D) Gaussian centered at (0,0) and with stddev of mymodel.sigma2_offset
 	 */
-	double calculatePdfOffset(Matrix1D<double> offset, Matrix1D<double> prior);
+	DOUBLE calculatePdfOffset(Matrix1D<DOUBLE> offset, Matrix1D<DOUBLE> prior);
 
 	/* From the vectors of Fourier transforms of the images, calculate running averages over the movie frames
 	 */
@@ -661,7 +670,7 @@ public:
 	void doThreadPrecalculateShiftedImagesCtfsAndInvSigma2s_gpu();
 
 	void doThreadGetSquaredDifferencesAllOrientations_gpu();
-
+	void doThreadGetSquaredDifferencesAllOrientations_multi_class_gpu();
 	void getAllSquaredDifferences_gpu();
 
 	void doThreadConvertSquaredDifferencesToWeightsAllOrientations_gpu();
@@ -670,19 +679,19 @@ public:
 	void computeSpectrum_gpu();
 	void storeWeightedSums_gpu();
 	void doThreadStoreWeightedSumsAllOrientations_gpu();
-
+	void doThreadStoreWeightedSumsAllOrientations_multi_class_gpu();
 	void project_backproject_GPU_data_init();
 	void copy_backproject_data_to_CPU();
 	void do_nothing();
-
+	void subYellowMK_gpu( DOUBLE *image_red_D);
 
 
 
 	int* nr_get2d;
-	double* value_get2d;
+	DOUBLE* value_get2d;
 	bool first_get2d;
-	void compare_CPU_GPU(Complex* data_cpu, cufftDoubleComplex* data_gpu, long int size, char* name, bool is_exit);
-	void compare_CPU_GPU(double* data_cpu, double* data_gpu, long int size, char* name, bool is_exit);
+	void compare_CPU_GPU(Complex* data_cpu, CUFFT_COMPLEX * data_gpu, long int size, char* name, bool is_exit);
+	void compare_CPU_GPU(DOUBLE* data_cpu, DOUBLE* data_gpu, long int size, char* name, bool is_exit);
 };
 
 // Global call to threaded core of doThreadGetFourierTransformsAndCtfs

@@ -104,12 +104,12 @@
  * is, M2x2_BY_V2x1(b, M, b);, is allowed).
  *
  * @code
- * double example
+ * DOUBLE example
  * {
  *     SPEED_UP_temps;
  *
- *     Matrix1D< double > a(2), b(2);
- *     Matrix2D< double > M(2, 2);
+ *     Matrix1D< DOUBLE > a(2), b(2);
+ *     Matrix2D< DOUBLE > M(2, 2);
  *
  *     M.init_random(0, 1);
  *     b.init_random(0, 1);
@@ -134,12 +134,12 @@
  * is, M3x3_BY_V3x1(b, M, b);, is allowed).
  *
  * @code
- * double example
+ * DOUBLE example
  * {
  *     SPEED_UP_temps;
  *
- *     Matrix1D< double > a(3), b(3);
- *     Matrix2D< double > M(3, 3);
+ *     Matrix1D< DOUBLE > a(3), b(3);
+ *     Matrix2D< DOUBLE > M(3, 3);
  *
  *     M.init_random(0, 1);
  *     b.init_random(0, 1);
@@ -174,21 +174,21 @@ void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b);
 
 template<typename T>
 void svdcmp(const Matrix2D< T >& a,
-            Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v);
+            Matrix2D< DOUBLE >& u,
+            Matrix1D< DOUBLE >& w,
+            Matrix2D< DOUBLE >& v);
 
-void svbksb(Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v,
-            Matrix1D< double >& b,
-            Matrix1D< double >& x);
+void svbksb(Matrix2D< DOUBLE >& u,
+            Matrix1D< DOUBLE >& w,
+            Matrix2D< DOUBLE >& v,
+            Matrix1D< DOUBLE >& b,
+            Matrix1D< DOUBLE >& x);
 
 template<typename T>
 void solve(const Matrix2D<T>& A,
 		   const Matrix1D<T>& b,
-           Matrix1D< double >& result,
-           double tolerance);
+           Matrix1D< DOUBLE >& result,
+           DOUBLE tolerance);
 
 /** Matrix2D class */
 template<typename T>
@@ -435,7 +435,7 @@ public:
     /** Same value in all components.
      *
      * The constant must be of a type compatible with the array type, ie,
-     * you cannot  assign a double to an integer array without a casting.
+     * you cannot  assign a DOUBLE to an integer array without a casting.
      * It is not an error if the array is empty, then nothing is done.
      *
      * @code
@@ -711,7 +711,7 @@ public:
      * than the argument and the same values (within accuracy).
      */
     bool equal(const Matrix2D<T>& op,
-               double accuracy = XMIPP_EQUAL_ACCURACY) const
+               DOUBLE accuracy = XMIPP_EQUAL_ACCURACY) const
     {
         if (!sameShape(op))
             return false;
@@ -728,7 +728,7 @@ public:
     /** Set very small values (ABS(val)< accuracy) equal to zero
       *
       */
-    void setSmallValuesToZero(double accuracy = XMIPP_EQUAL_ACCURACY)
+    void setSmallValuesToZero(DOUBLE accuracy = XMIPP_EQUAL_ACCURACY)
     {
         for (int i = 0; i < mdimy; i++)
              for (int j = 0; j < mdimx; j++)
@@ -774,7 +774,7 @@ public:
     *
     * This function must be used only as a preparation for routines which need
     * that the first physical index is 1 and not 0 as it usually is in C. New
-    * memory is needed to hold the new double pointer array.
+    * memory is needed to hold the new DOUBLE pointer array.
     */
     T** adaptForNumericalRecipes() const
     {
@@ -848,14 +848,14 @@ public:
         else
         {
             ostrm << std::endl;
-            double max_val = v.computeMax();
+            DOUBLE max_val = v.computeMax();
             int prec = bestPrecision(max_val, 10);
 
             for (int i = 0; i < v.Ydim(); i++)
             {
                 for (int j = 0; j < v.Xdim(); j++)
                 {
-                    ostrm << std::setw(13) << floatToString((double) v(i, j), 10, prec) << ' ';
+                    ostrm << std::setw(13) << floatToString((DOUBLE) v(i, j), 10, prec) << ' ';
                 }
                 ostrm << std::endl;
             }
@@ -871,7 +871,7 @@ public:
      * according to the shape.
      *
      * @code
-     * Matrix2D< double > m = fromVector(v);
+     * Matrix2D< DOUBLE > m = fromVector(v);
      * @endcode
      */
     void fromVector(const Matrix1D<T>& op1)
@@ -909,7 +909,7 @@ public:
      * matrix.
      *
      * @code
-     * Matrix1D< double > v;
+     * Matrix1D< DOUBLE > v;
      * m.toVector(v);
      * @endcode
      */
@@ -973,7 +973,7 @@ public:
      * logical not physical.
      *
      * @code
-     * std::vector< double > v;
+     * std::vector< DOUBLE > v;
      * m.getRow(-2, v);
      * @endcode
      */
@@ -1002,7 +1002,7 @@ public:
      * choosen column.
      *
      * @code
-     * std::vector< double > v;
+     * std::vector< DOUBLE > v;
      * m.getCol(-1, v);
      * @endcode
      */
@@ -1083,7 +1083,7 @@ public:
      * An exception is thrown if the matrix is not squared or it is empty.
      *
      * @code
-     * double det = m.det();
+     * DOUBLE det = m.det();
      * @endcode
      */
     T det() const
@@ -1145,7 +1145,7 @@ public:
      * pseudoinverse is returned.
      *
      * @code
-     * Matrix2D< double > m1_inv;
+     * Matrix2D< DOUBLE > m1_inv;
      * m1.inv(m1_inv);
      * @endcode
      */
@@ -1170,7 +1170,7 @@ public:
         	MAT_ELEM(result, 2, 0) =   MAT_ELEM((*this), 2, 1)*MAT_ELEM((*this), 1, 0)-MAT_ELEM((*this), 2, 0)*MAT_ELEM((*this), 1, 1);
         	MAT_ELEM(result, 2, 1) = -(MAT_ELEM((*this), 2, 1)*MAT_ELEM((*this), 0, 0)-MAT_ELEM((*this), 2, 0)*MAT_ELEM((*this), 0, 1));
         	MAT_ELEM(result, 2, 2) =   MAT_ELEM((*this), 1, 1)*MAT_ELEM((*this), 0, 0)-MAT_ELEM((*this), 1, 0)*MAT_ELEM((*this), 0, 1);
-        	double tmp = MAT_ELEM((*this), 0, 0) * MAT_ELEM(result, 0, 0) +
+        	DOUBLE tmp = MAT_ELEM((*this), 0, 0) * MAT_ELEM(result, 0, 0) +
         			     MAT_ELEM((*this), 1, 0) * MAT_ELEM(result, 0, 1) +
         			     MAT_ELEM((*this), 2, 0) * MAT_ELEM(result, 0, 2);
         	result /= tmp;
@@ -1181,7 +1181,7 @@ public:
         	MAT_ELEM(result, 0, 1) = -MAT_ELEM((*this), 0, 1);
         	MAT_ELEM(result, 1, 0) = -MAT_ELEM((*this), 1, 0);
         	MAT_ELEM(result, 1, 1) =  MAT_ELEM((*this), 0, 0);
-        	double tmp = MAT_ELEM((*this), 0, 0) * MAT_ELEM((*this), 1, 1) -
+        	DOUBLE tmp = MAT_ELEM((*this), 0, 0) * MAT_ELEM((*this), 1, 1) -
 					     MAT_ELEM((*this), 0, 1) * MAT_ELEM((*this), 1, 0);
         	result /= tmp;
         }
@@ -1189,11 +1189,11 @@ public:
         {
 
 			// Perform SVD decomposition
-			Matrix2D< double > u, v;
-			Matrix1D< double > w;
+			Matrix2D< DOUBLE > u, v;
+			Matrix1D< DOUBLE > w;
 			svdcmp(*this, u, w, v); // *this = U * W * V^t
 
-			double tol = computeMax() * XMIPP_MAX(mdimx, mdimy) * 1e-14;
+			DOUBLE tol = computeMax() * XMIPP_MAX(mdimx, mdimy) * 1e-14;
 
 			// Compute W^-1
 			bool invertible = false;
@@ -1311,21 +1311,21 @@ void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b)
 
 /** SVD Backsubstitution
  */
-void svbksb(Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v,
-            Matrix1D< double >& b,
-            Matrix1D< double >& x);
+void svbksb(Matrix2D< DOUBLE >& u,
+            Matrix1D< DOUBLE >& w,
+            Matrix2D< DOUBLE >& v,
+            Matrix1D< DOUBLE >& b,
+            Matrix1D< DOUBLE >& x);
 
 /** SVD Decomposition (through numerical recipes)
  */
 template<typename T>
 void svdcmp(const Matrix2D< T >& a,
-            Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v)
+            Matrix2D< DOUBLE >& u,
+            Matrix1D< DOUBLE >& w,
+            Matrix2D< DOUBLE >& v)
 {
-    // svdcmp only works with double
+    // svdcmp only works with DOUBLE
     typeCast(a, u);
 
     // Set size of matrices
@@ -1342,8 +1342,8 @@ void svdcmp(const Matrix2D< T >& a,
 /** Solve system of linear equations (Ax=b) through SVD Decomposition (through numerical recipes)
  */
 template<typename T>
-void solve(const Matrix2D< double >& A, const Matrix1D< double >& b,
-                  Matrix1D< double >& result, double tolerance)
+void solve(const Matrix2D< DOUBLE >& A, const Matrix1D< DOUBLE >& b,
+                  Matrix1D< DOUBLE >& result, DOUBLE tolerance)
 {
     if (A.mdimx == 0)
         REPORT_ERROR("Solve: Matrix is empty");
@@ -1359,8 +1359,8 @@ void solve(const Matrix2D< double >& A, const Matrix1D< double >& b,
 
     // First perform de single value decomposition
     // Xmipp interface that calls to svdcmp of numerical recipes
-    Matrix2D< double > u, v;
-    Matrix1D< double > w;
+    Matrix2D< DOUBLE > u, v;
+    Matrix1D< DOUBLE > w;
     svdcmp(A, u, w, v);
 
     // Here is checked if eigenvalues of the svd decomposition are acceptable
@@ -1374,7 +1374,7 @@ void solve(const Matrix2D< double >& A, const Matrix1D< double >& b,
     result.resize(b.vdim);
 
     // Xmipp interface that calls to svdksb of numerical recipes
-    Matrix1D< double > bd;
+    Matrix1D< DOUBLE > bd;
     typeCast(b, bd);
     svbksb(u, w, v, bd, result);
 }
@@ -1403,11 +1403,11 @@ void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
 
 /** Least-squares rigid transformation between two sets of 3D coordinates
  *
-double lsq_rigid_body_transformation(std::vector<Matrix1D<double> > &set1, std::vector<Matrix1D<double> > &set2,
-		Matrix2D<double> &Rot, Matrix1D<double> &trans)
+DOUBLE lsq_rigid_body_transformation(std::vector<Matrix1D<DOUBLE> > &set1, std::vector<Matrix1D<DOUBLE> > &set2,
+		Matrix2D<DOUBLE> &Rot, Matrix1D<DOUBLE> &trans)
 {
-	Matrix2D<double> A;
-	Matrix1D<double> avg1, avg2;
+	Matrix2D<DOUBLE> A;
+	Matrix1D<DOUBLE> avg1, avg2;
 
 	if (set1.size() != set2.size())
 		REPORT_ERROR("lsq_rigid_body_transformation ERROR: unequal set size");
@@ -1424,8 +1424,8 @@ double lsq_rigid_body_transformation(std::vector<Matrix1D<double> > &set1, std::
 		avg1 += set1[i];
 		avg2 += set2[i];
 	}
-	avg1 /= (double)set1.size();
-	avg2 /= (double)set1.size();
+	avg1 /= (DOUBLE)set1.size();
+	avg2 /= (DOUBLE)set1.size();
 
 	A.initZeros(3, 3);
 	Rot.initZeros(4,4);
@@ -1443,8 +1443,8 @@ double lsq_rigid_body_transformation(std::vector<Matrix1D<double> > &set1, std::
 		A(2, 2) += (ZZ(set1[i]) - ZZ(avg1)) * (ZZ(set2[i]) - ZZ(avg2));
 	}
 
-	Matrix2D< double > U, V;
-	Matrix1D< double > w;
+	Matrix2D< DOUBLE > U, V;
+	Matrix1D< DOUBLE > w;
 
 	// TODO: check inverse, transpose etc etc!!!
 
@@ -1456,7 +1456,7 @@ double lsq_rigid_body_transformation(std::vector<Matrix1D<double> > &set1, std::
 	trans = avg1 - Rot * avg2;
 
 	// return the squared difference term
-	double error = 0.;
+	DOUBLE error = 0.;
 	for (int i = 0; i < set1.size(); i++)
 	{
 		error += (Rot * set2[i] + trans - set1[i]).sum2();
@@ -1469,7 +1469,7 @@ double lsq_rigid_body_transformation(std::vector<Matrix1D<double> > &set1, std::
 
 /** Conversion from one type to another.
  *
- * If we have an integer array and we need a double one, we can use this
+ * If we have an integer array and we need a DOUBLE one, we can use this
  * function. The conversion is done through a type casting of each element
  * If n >= 0, only the nth volumes will be converted, otherwise all NSIZE volumes
  */

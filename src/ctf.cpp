@@ -85,8 +85,8 @@ void CTF::read(MetaDataTable &MD1, MetaDataTable &MD2, long int objectID)
 
 	initialise();
 }
-void CTF::setValues(double _defU, double _defV, double _defAng, double _voltage,
-		double _Cs, double _Q0, double _Bfac, double _scale)
+void CTF::setValues(DOUBLE _defU, DOUBLE _defV, DOUBLE _defAng, DOUBLE _voltage,
+		DOUBLE _Cs, DOUBLE _Q0, DOUBLE _Bfac, DOUBLE _scale)
 {
 	kV              = _voltage;
 	DeltafU         = _defU;
@@ -138,8 +138,8 @@ void CTF::initialise()
 {
 
 	// Change units
-    double local_Cs = Cs * 1e7;
-    double local_kV = kV * 1e3;
+    DOUBLE local_Cs = Cs * 1e7;
+    DOUBLE local_kV = kV * 1e3;
     rad_azimuth = DEG2RAD(azimuthal_angle);
 
     // Average focus and deviation
@@ -171,31 +171,31 @@ void CTF::initialise()
 }
 
 /* Generate a complete CTF Image ------------------------------------------------------ */
-void CTF::getFftwImage(MultidimArray<double> &result, int orixdim, int oriydim, double angpix,
+void CTF::getFftwImage(MultidimArray<DOUBLE> &result, int orixdim, int oriydim, DOUBLE angpix,
 		    		bool do_abs, bool do_only_flip_phases, bool do_intact_until_first_peak, bool do_damping)
 {
 
-	double xs = (double)orixdim * angpix;
-	double ys = (double)oriydim * angpix;
+	DOUBLE xs = (DOUBLE)orixdim * angpix;
+	DOUBLE ys = (DOUBLE)oriydim * angpix;
 	FOR_ALL_ELEMENTS_IN_FFTW_TRANSFORM2D(result)
 	{
-		double x = (double)jp / xs;
-		double y = (double)ip / ys;
+		DOUBLE x = (DOUBLE)jp / xs;
+		DOUBLE y = (DOUBLE)ip / ys;
 		DIRECT_A2D_ELEM(result, i, j) = getCTF(x, y, do_abs, do_only_flip_phases, do_intact_until_first_peak, do_damping);
 	}
 }
 
-void CTF::getCenteredImage(MultidimArray<double> &result, double Tm,
+void CTF::getCenteredImage(MultidimArray<DOUBLE> &result, DOUBLE Tm,
 		    		bool do_abs, bool do_only_flip_phases, bool do_intact_until_first_peak, bool do_damping)
 {
 	result.setXmippOrigin();
-	double xs = (double)XSIZE(result) * Tm;
-	double ys = (double)YSIZE(result) * Tm;
+	DOUBLE xs = (DOUBLE)XSIZE(result) * Tm;
+	DOUBLE ys = (DOUBLE)YSIZE(result) * Tm;
 
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(result)
 	{
-		double x = (double)j / xs;
-		double y = (double)i / ys;
+		DOUBLE x = (DOUBLE)j / xs;
+		DOUBLE y = (DOUBLE)i / ys;
 		A2D_ELEM(result, i, j) = getCTF(x, y, do_abs, do_only_flip_phases, do_intact_until_first_peak, do_damping);
 	}
 

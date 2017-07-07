@@ -142,16 +142,20 @@ void trim(std::string& str)
 
 /* NOTE: not a very safe implemenation but standard c functions do not retrieve
  * more than 6 significative digits */
-double textToDouble(const char* str, int _errno, std::string errmsg)
+DOUBLE textToDouble(const char* str, int _errno, std::string errmsg)
 {
-    double retval;
+    DOUBLE retval;
     int ok;
 
     if (str == NULL)
     	REPORT_ERROR( errmsg);
 
+    //ok = sscanf(str, "%lf", &retval);
+#ifdef FLOAT_PRECISION
+    ok = sscanf(str, "%f", &retval);
+#else
     ok = sscanf(str, "%lf", &retval);
-
+#endif
     if (ok)
         return retval;
 

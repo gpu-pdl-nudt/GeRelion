@@ -85,7 +85,7 @@ int MpiNode::relion_MPI_Send(void *buf, int count, MPI_Datatype datatype, int de
 {
 
 	int result;
-	double start_time = MPI_Wtime();
+	DOUBLE start_time = MPI_Wtime();
 
 #define ONLY_NORMAL_SEND
 #ifdef ONLY_NORMAL_SEND
@@ -145,8 +145,8 @@ int MpiNode::relion_MPI_Recv(void *buf, int count, MPI_Datatype datatype, int so
 {
 	int result;
 	MPI_Request request;
-	double current_time = MPI_Wtime();
-	double start_time = current_time;
+	DOUBLE current_time = MPI_Wtime();
+	DOUBLE start_time = current_time;
 
 	// First make a non-blocking receive
 	int result_irecv = MPI_Irecv(buf, count, datatype, source, tag, comm, &request);
@@ -211,7 +211,7 @@ void printMpiNodesMachineNames(MpiNode &node, int nthreads)
 
     if (node.isMaster())
     {
-    	std::cout << " === GERELION MPI setup ===" << std::endl;
+    	std::cout << " === MPI setup ===" << std::endl;
     	std::cout << " + Number of MPI processes             = " << node.size << std::endl;
     	if (nthreads > 1)
     	{

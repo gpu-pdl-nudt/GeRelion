@@ -106,7 +106,7 @@
  * FourierTransformer transformer;
  * MultidimArray< Complex > Vfft;
  * transformer.FourierTransform(V(),Vfft,false);
- * MultidimArray<double> Vmag;
+ * MultidimArray<DOUBLE> Vmag;
  * Vmag.resize(Vfft);
  * FOR_ALL_ELEMENTS_IN_ARRAY3D(Vmag)
  *     Vmag(k,i,j)=20*log10(abs(Vfft(k,i,j)));
@@ -116,7 +116,7 @@ class FourierTransformer
 {
 public:
 	/** Real array, in fact a pointer to the user array is stored. */
-	MultidimArray<double>* fReal;
+	MultidimArray<DOUBLE>* fReal;
 
 	/** Complex array, in fact a pointer to the user array is stored. */
 	MultidimArray<Complex >* fComplex;
@@ -125,10 +125,19 @@ public:
 	MultidimArray< Complex > fFourier;
 
 	/* fftw Forawrd plan */
-	fftw_plan fPlanForward;
+#ifdef FLOAT_PRECISION
+    /* fftw Forward plan */
+    fftwf_plan fPlanForward;
 
-	/* fftw Backward plan */
-	fftw_plan fPlanBackward;
+    /* fftw Backward plan */
+    fftwf_plan fPlanBackward;
+#else
+    /* fftw Forward plan */
+    fftw_plan fPlanForward;
+
+    /* fftw Backward plan */
+    fftw_plan fPlanBackward;
+#endif
 
 	/* number of threads*/
 	int nthreads;
@@ -236,7 +245,7 @@ public:
 	{
 		V.resize(fFourier);
 		memcpy(MULTIDIM_ARRAY(V), MULTIDIM_ARRAY(fFourier),
-		       MULTIDIM_SIZE(fFourier) * 2 * sizeof(double));
+		       MULTIDIM_SIZE(fFourier) * 2 * sizeof(DOUBLE));
 	}
 
 	/** Return a complete Fourier transform (two halves).
@@ -327,10 +336,10 @@ public:
 
 	// Internal methods
 public:
-	/* Pointer to the array of doubles with which the plan was computed */
-	double* dataPtr;
+	/* Pointer to the array of DOUBLEs with which the plan was computed */
+	DOUBLE* dataPtr;
 
-	/* Pointer to the array of complex<double> with which the plan was computed */
+	/* Pointer to the array of complex<DOUBLE> with which the plan was computed */
 	Complex* complexDataPtr;
 
 	/* Initialise all pointers to NULL */
@@ -357,7 +366,7 @@ public:
 	void Transform(int sign);
 
 	/** Get the Multidimarray that is being used as input. */
-	const MultidimArray<double>& getReal() const;
+	const MultidimArray<DOUBLE>& getReal() const;
 	const MultidimArray<Complex >& getComplex() const;
 
 	/** Set a Multidimarray for input.
@@ -365,7 +374,7 @@ public:
 	    transforms it is not modified, but in backward transforms,
 	    the result will be stored in img. This means that the size
 	    of img cannot change between calls. */
-	void setReal(MultidimArray<double>& img);
+	void setReal(MultidimArray<DOUBLE>& img);
 
 	/** Set a Multidimarray for input.
 	    The data of img will be the one of fComplex. In forward
@@ -387,17 +396,17 @@ public:
 
 	cufftHandle fPlanForward_gpu;
 	cufftHandle fPlanBackward_gpu;
-	/* Pointer to the array of doubles with which the plan was computed */
-	cufftDoubleReal* dataPtr_D;
+	/* Pointer to the array of DOUBLEs with which the plan was computed */
+	CUFFT_REAL* dataPtr_D;
 
-	/* Pointer to the array of complex<double> with which the plan was computed */
-	cufftDoubleComplex* complexDataPtr_D;
+	/* Pointer to the array of complex<DOUBLE> with which the plan was computed */
+	CUFFT_COMPLEX * complexDataPtr_D;
 
-	cufftDoubleComplex* fFourier_D;
+	CUFFT_COMPLEX * fFourier_D;
 
 	//template <typename T>
 	//       void getFourierAlias_gpu(T *V) {V = fFourier_D; return;}
-	cufftDoubleComplex* getFourierAlias_gpu()
+	CUFFT_COMPLEX * getFourierAlias_gpu()
 	{
 		//std::cout << "The ponit address is  111 fFourier_D " << (&fFourier_D)  <<std::endl;
 		return fFourier_D;
@@ -406,18 +415,18 @@ public:
 	template <typename T>
 	void getFourierCopy_gpu(T* V, int size_t)
 	{
-		cudaMemcpy(V, fFourier_D, size_t * 2 * sizeof(double), cudaMemcpyDeviceToDevice);
+		cudaMemcpy(V, fFourier_D, size_t * 2 * sizeof(DOUBLE), cudaMemcpyDeviceToDevice);
 
 	}
 
 	void free_memory_gpu();
 
-	// MultidimArray< cufftDoubleComplex > fFourier;
+	// MultidimArray< CUFFT_COMPLEX  > fFourier;
 	template <typename T, typename T1>
 	void FourierTransform_gpu(T* V1, T1* V2, int nr_images, int xdim, int ydim, int zdim, bool getCopy = true)
 	{
 		setReal_gpu(V1, nr_images, xdim, ydim, zdim);
-		//cufftExecD2Z(fPlanForward_gpu, (cufftDoubleReal*)dataPtr_gpu, (cufftDoubleComplex *)V2, CUFFT_FORWARD);
+		//cufftExecD2Z(fPlanForward_gpu, (cufftDoubleReal*)dataPtr_gpu, (CUFFT_COMPLEX  *)V2, CUFFT_FORWARD);
 		Transform_gpu(nr_images, xdim, ydim, zdim, CUFFT_FORWARD);
 		if (getCopy)
 		{
@@ -440,7 +449,7 @@ public:
 		//fFourier_D = V1;
 		setFourier_gpu(V1, nr_images, (xdim / 2 + 1), ydim, zdim);
 		inverseTransform_gpu();
-		//cudaMemcpy(V2, dataPtr_D, xdim*ydim*zdim*2*sizeof(double), cudaMemcpyDeviceToDevice );
+		//cudaMemcpy(V2, dataPtr_D, xdim*ydim*zdim*2*sizeof(DOUBLE), cudaMemcpyDeviceToDevice );
 
 	}
 	/*
@@ -456,14 +465,14 @@ public:
 	    transforms it is not modified, but in backward transforms,
 	    the result will be stored in img. This means that the size
 	    of img cannot change between calls. */
-	void setReal_gpu(cufftDoubleReal* V1, int nr_images, int xdim, int ydim, int zdim);
-	void setFourier_gpu(cufftDoubleComplex* inputFourier, int nr_images, int xdim, int ydim, int zdim);
+	void setReal_gpu(CUFFT_REAL* V1, int nr_images, int xdim, int ydim, int zdim);
+	void setFourier_gpu(CUFFT_COMPLEX * inputFourier, int nr_images, int xdim, int ydim, int zdim);
 	/** Set a Multidimarray for input.
 	    The data of img will be the one of fComplex. In forward
 	    transforms it is not modified, but in backward transforms,
 	    the result will be stored in img. This means that the size
 	    of img cannot change between calls. */
-	void setReal_gpu(cufftDoubleComplex* V1, int nr_images, int xdim, int ydim, int zdim);
+	void setReal_gpu(CUFFT_COMPLEX * V1, int nr_images, int xdim, int ydim, int zdim);
 
 	void Transform_gpu(int nr_images, int xdim, int ydim, int zdim, int sign = CUFFT_FORWARD);
 	void inverseTransform_gpu();
@@ -473,7 +482,7 @@ public:
 };
 
 // Randomize phases beyond the given shell (index)
-void randomizePhasesBeyond(MultidimArray<double>& I, int index);
+void randomizePhasesBeyond(MultidimArray<DOUBLE>& I, int index);
 
 /** Center an array, to have its origin at the origin of the FFTW
  *
@@ -803,7 +812,7 @@ void resizeFourierTransform(MultidimArray<T >& in,
 
 	// Otherwise apply a windowing operation
 	MultidimArray<Complex > Fin;
-	MultidimArray<double> Min;
+	MultidimArray<DOUBLE> Min;
 	FourierTransformer transformer;
 	long int x0, y0, z0, xF, yF, zF;
 	x0 = y0 = z0 = FIRST_XMIPP_INDEX(newdim);
@@ -827,7 +836,7 @@ void resizeFourierTransform(MultidimArray<T >& in,
 		REPORT_ERROR("resizeFourierTransform ERROR: dimension should be 1, 2 or 3!");
 	}
 
-	// This is to handle double-valued input arrays
+	// This is to handle DOUBLE-valued input arrays
 	Fin.resize(ZSIZE(in), YSIZE(in), XSIZE(in));
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(in)
 	{
@@ -873,21 +882,21 @@ void resizeFourierTransform(MultidimArray<T >& in,
  */
 void getFSC(MultidimArray< Complex >& FT1,
             MultidimArray< Complex >& FT2,
-            MultidimArray< double >& fsc);
+            MultidimArray< DOUBLE >& fsc);
 
 /** Fourier-Ring-Correlation between two multidimArrays using FFT
  * @ingroup FourierOperations
  * Simpler I/O than above.
  */
-void getFSC(MultidimArray< double >& m1,
-            MultidimArray< double >& m2,
-            MultidimArray< double >& fsc);
+void getFSC(MultidimArray< DOUBLE >& m1,
+            MultidimArray< DOUBLE >& m2,
+            MultidimArray< DOUBLE >& fsc);
 
 /** Scale matrix using Fourier transform
  * @ingroup FourierOperations
  * Ydim and Xdim define the output size, Mpmem is the matrix to scale
  */
-//void selfScaleToSizeFourier(long int Ydim, long int Xdim, MultidimArray<double>& Mpmem, int nthreads=1);
+//void selfScaleToSizeFourier(long int Ydim, long int Xdim, MultidimArray<DOUBLE>& Mpmem, int nthreads=1);
 
 // Shift an image through phase-shifts in its Fourier Transform
 // Note that in and out may be the same array, in that case in is overwritten with the result
@@ -896,7 +905,7 @@ void getFSC(MultidimArray< double >& m1,
 void shiftImageInFourierTransform(MultidimArray<Complex >& in,
                                   MultidimArray<Complex >& out,
                                   TabSine& tab_sin, TabCosine& tab_cos,
-                                  double oridim, Matrix1D<double> shift);
+                                  DOUBLE oridim, Matrix1D<DOUBLE> shift);
 
 // Shift an image through phase-shifts in its Fourier Transform (without tabulated sine and cosine)
 // Note that in and out may be the same array, in that case in is overwritten with the result
@@ -904,7 +913,7 @@ void shiftImageInFourierTransform(MultidimArray<Complex >& in,
 // or both can be in Angstroms
 void shiftImageInFourierTransform(MultidimArray<Complex >& in,
                                   MultidimArray<Complex >& out,
-                                  double oridim, Matrix1D<double> shift);
+                                  DOUBLE oridim, Matrix1D<DOUBLE> shift);
 
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1
@@ -913,32 +922,32 @@ void shiftImageInFourierTransform(MultidimArray<Complex >& in,
  * @ingroup FourierOperations
     i.e. the radial average of the (squared) amplitudes of all Fourier components
 */
-void getSpectrum(MultidimArray<double>& Min,
-                 MultidimArray<double>& spectrum,
+void getSpectrum(MultidimArray<DOUBLE>& Min,
+                 MultidimArray<DOUBLE>& spectrum,
                  int spectrum_type = POWER_SPECTRUM);
 
 /** Divide the input map in Fourier-space by the spectrum provided.
  * @ingroup FourierOperations
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void divideBySpectrum(MultidimArray<double>& Min,
-                      MultidimArray<double>& spectrum,
+void divideBySpectrum(MultidimArray<DOUBLE>& Min,
+                      MultidimArray<DOUBLE>& spectrum,
                       bool leave_origin_intact = false);
 
 /** Multiply the input map in Fourier-space by the spectrum provided.
  * @ingroup FourierOperations
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void multiplyBySpectrum(MultidimArray<double>& Min,
-                        MultidimArray<double>& spectrum,
+void multiplyBySpectrum(MultidimArray<DOUBLE>& Min,
+                        MultidimArray<DOUBLE>& spectrum,
                         bool leave_origin_intact = false);
 
 /** Perform a whitening of the amplitude/power_class spectrum of a 3D map
  * @ingroup FourierOperations
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void whitenSpectrum(MultidimArray<double>& Min,
-                    MultidimArray<double>& Mout,
+void whitenSpectrum(MultidimArray<DOUBLE>& Min,
+                    MultidimArray<DOUBLE>& Mout,
                     int spectrum_type = AMPLITUDE_SPECTRUM,
                     bool leave_origin_intact = false);
 
@@ -946,51 +955,51 @@ void whitenSpectrum(MultidimArray<double>& Min,
  * @ingroup FourierOperations
     If only_amplitudes==true, the amplitude rather than the power_class spectrum will be equalized
 */
-void adaptSpectrum(MultidimArray<double>& Min,
-                   MultidimArray<double>& Mout,
-                   const MultidimArray<double>& spectrum_ref,
+void adaptSpectrum(MultidimArray<DOUBLE>& Min,
+                   MultidimArray<DOUBLE>& Mout,
+                   const MultidimArray<DOUBLE>& spectrum_ref,
                    int spectrum_type = AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact = false);
 
 /** Kullback-Leibner divergence */
-double getKullbackLeibnerDivergence(MultidimArray<Complex >& Fimg,
-                                    MultidimArray<Complex >& Fref, MultidimArray<double>& sigma2,
-                                    MultidimArray<double>& p_i, MultidimArray<double>& q_i,
+DOUBLE getKullbackLeibnerDivergence(MultidimArray<Complex >& Fimg,
+                                    MultidimArray<Complex >& Fref, MultidimArray<DOUBLE>& sigma2,
+                                    MultidimArray<DOUBLE>& p_i, MultidimArray<DOUBLE>& q_i,
                                     int highshell = -1, int lowshell = -1);
 
 
 // Resize a map by windowing it's Fourier Transform
-void resizeMap(MultidimArray<double >& img, int newsize);
+void resizeMap(MultidimArray<DOUBLE >& img, int newsize);
 
 
 // Correct a map by its MTF-curve
 void correctMapForMTF(MultidimArray<Complex >& FT, int ori_size, FileName& fn_mtf);
-void correctMapForMTF(MultidimArray<double >& img, FileName& fn_mtf);
+void correctMapForMTF(MultidimArray<DOUBLE >& img, FileName& fn_mtf);
 
 // Apply a B-factor to a map (given it's Fourier transform)
-void applyBFactorToMap(MultidimArray<Complex >& FT, int ori_size, double bfactor, double angpix);
+void applyBFactorToMap(MultidimArray<Complex >& FT, int ori_size, DOUBLE bfactor, DOUBLE angpix);
 
 // Apply a B-factor to a map (given it's real-space array)
-void applyBFactorToMap(MultidimArray<double >& img, double bfactor, double angpix);
+void applyBFactorToMap(MultidimArray<DOUBLE >& img, DOUBLE bfactor, DOUBLE angpix);
 
 // Low-pass filter a map (given it's Fourier transform)
 void lowPassFilterMap(MultidimArray<Complex >& FT, int ori_size,
-                      double low_pass, double angpix, int filter_edge_width = 2, bool do_highpass_instead = false);
+                      DOUBLE low_pass, DOUBLE angpix, int filter_edge_width = 2, bool do_highpass_instead = false);
 
 // Low-pass and high-pass filter a map (given it's real-space array)
-void lowPassFilterMap(MultidimArray<double >& img, double low_pass, double angpix, int filter_edge_width = 2);
-void highPassFilterMap(MultidimArray<double >& img, double low_pass, double angpix, int filter_edge_width = 2);
+void lowPassFilterMap(MultidimArray<DOUBLE >& img, DOUBLE low_pass, DOUBLE angpix, int filter_edge_width = 2);
+void highPassFilterMap(MultidimArray<DOUBLE >& img, DOUBLE low_pass, DOUBLE angpix, int filter_edge_width = 2);
 
 /*
  *  Beamtilt x and y are given in mradians
  *  Wavelength in Angstrom, Cs in mm
  *  Phase shifts caused by the beamtilt will be calculated and applied to Fimg
  */
-void selfApplyBeamTilt(MultidimArray<Complex >& Fimg, double beamtilt_x, double beamtilt_y,
-                       double wavelength, double Cs, double angpix, int ori_size);
+void selfApplyBeamTilt(MultidimArray<Complex >& Fimg, DOUBLE beamtilt_x, DOUBLE beamtilt_y,
+                       DOUBLE wavelength, DOUBLE Cs, DOUBLE angpix, int ori_size);
 
-void applyBeamTilt(const MultidimArray<Complex >& Fin, MultidimArray<Complex >& Fout, double beamtilt_x, double beamtilt_y,
-                   double wavelength, double Cs, double angpix, int ori_size);
+void applyBeamTilt(const MultidimArray<Complex >& Fin, MultidimArray<Complex >& Fout, DOUBLE beamtilt_x, DOUBLE beamtilt_y,
+                   DOUBLE wavelength, DOUBLE Cs, DOUBLE angpix, int ori_size);
 
 
 //==================================================================================//
@@ -1009,11 +1018,11 @@ void windowFourierTransform_gpu(T* in,
                                 int zdim);
 template<typename T>
 void selfApplyBeamTilt_gpu(T* Fimg_D,
-                           double* beamtilt_x_D,
-                           double* beamtilt_y_D,
-                           double* wavelength,
-                           double* Cs_D,
-                           double angpix,
+                           DOUBLE* beamtilt_x_D,
+                           DOUBLE* beamtilt_y_D,
+                           DOUBLE* wavelength,
+                           DOUBLE* Cs_D,
+                           DOUBLE angpix,
                            int ori_size,
                            int nr_images,
                            int ndim,
@@ -1023,8 +1032,15 @@ void selfApplyBeamTilt_gpu(T* Fimg_D,
 template<typename T>
 void shiftImageInFourierTransform_gpu(T* in,
                                       T* out,
-                                      double oridim, double* shift,
+                                      DOUBLE oridim, DOUBLE* shift,
                                       int nr_images,  int nr_trans, int nr_oversampled_trans,
                                       int xdim, int ydim, int zdim);
+
+template<typename T>
+void shiftImageInFourierTransform_gpu(T* in,
+                                      T* out,
+                                      DOUBLE oridim, DOUBLE* shift,
+                                       bool* shift_flag_D, int nr_images,  int xdim, int ydim, int zdim);
+
 
 #endif

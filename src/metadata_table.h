@@ -63,7 +63,7 @@
 /** For all objects.
  @code
  FOR_ALL_OBJECTS_IN_METADATA(metadata) {
-   double rot;
+   DOUBLE rot;
    DF.getValue( EMDL_ANGLEROT, rot);
  }
  @endcode
@@ -245,23 +245,23 @@ public:
     {
     	if ( !(EMDL::isInt(name) || EMDL::isLong(name) || EMDL::isDouble(name)) )
     		REPORT_ERROR("MetadataTable::sort%% ERROR: can only sorted numbers");
-    	std::vector<std::pair<double,long int> > vp;
+    	std::vector<std::pair<DOUBLE,long int> > vp;
     	vp.reserve(objects.size());
     	long int i = 0;
     	FOR_ALL_OBJECTS_IN_METADATA_TABLE(*this)
     	{
-    		double dval;
+    		DOUBLE dval;
     		if (EMDL::isInt(name))
     		{
     			int val;
     			getValue(name, val);
-    			dval = (double) val;
+    			dval = (DOUBLE) val;
     		}
     		else if (EMDL::isLong(name))
     		{
     			long int val;
     			getValue(name, val);
-    			dval = (double) val;
+    			dval = (DOUBLE) val;
     		}
     		else
     		{

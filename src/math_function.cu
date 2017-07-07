@@ -36,10 +36,13 @@
 #include <fstream>
 #include <typeinfo>
 
+
 #define NUM_CTF_PARAMETERS 9*8
 
-__constant__ double ctf_related_parameters_D[NUM_CTF_PARAMETERS];
+__constant__ DOUBLE ctf_related_parameters_D[NUM_CTF_PARAMETERS];
 
+//#ifndef FLOAT_PRECISION
+#if !FLOAT_PRECISION && defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
 __device__ double atomicAdd(double* address, double val)
 {
 	unsigned long long int* address_as_ull = (unsigned long long int*)address;
@@ -53,27 +56,27 @@ __device__ double atomicAdd(double* address, double val)
 
 	return __longlong_as_double(old);
 }
-
-__device__ double realWRAP_kernel(double x,  double x0, double xF)
+#endif
+__device__ DOUBLE realWRAP_kernel(DOUBLE x,  DOUBLE x0, DOUBLE xF)
 {
 	return (((x) >= (x0) && (x) <= (xF)) ? (x) : ((x) < (x0)) \
 	        ? ((x) - (int)(((x) - (x0)) / ((xF) - (x0)) - 1) * ((xF) - (x0))) : \
 	        ((x) - (int)(((x) - (xF)) / ((xF) - (x0)) + 1) * ((xF) - (x0))));
 }
 
-extern __shared__ double  xp_yp_array[ ];
+extern __shared__ DOUBLE  xp_yp_array[ ];
 
-template <typename T>
-__global__ void applyGeometry_2D_kernel(const  T* __restrict__  V1, T* V2, double* Aref_matrix, double* exp_offset_D,  bool wrap, int xdim, int ydim, int image_size, T outside = 0)
+//template <typename T>
+__global__ void applyGeometry_2D_kernel(const  DOUBLE* __restrict__  V1, DOUBLE* V2, DOUBLE* Aref_matrix, DOUBLE* exp_offset_D,  bool wrap, int xdim, int ydim, int image_size, DOUBLE outside = 0)
 {
 	int tid = threadIdx.x;
 	int i = blockIdx.x;
 	int im_id = blockIdx.y;
 	int pixel_id = tid;
 
-	double* xp_dim = (double*) xp_yp_array;
-	double* yp_dim = (double*) &xp_dim[xdim];
-	double* Aref = (double*) &yp_dim[xdim];
+	DOUBLE* xp_dim = (DOUBLE*) xp_yp_array;
+	DOUBLE* yp_dim = (DOUBLE*) &xp_dim[xdim];
+	DOUBLE* Aref = (DOUBLE*) &yp_dim[xdim];
 
 	if (tid < 9)
 	{
@@ -91,10 +94,10 @@ __global__ void applyGeometry_2D_kernel(const  T* __restrict__  V1, T* V2, doubl
 
 	int m1, n1, m2, n2;
 	int x, y;
-	double xp, yp;
-	double minxp, minyp, maxxp, maxyp;
+	DOUBLE xp, yp;
+	DOUBLE minxp, minyp, maxxp, maxyp;
 	int cen_x, cen_y, cen_xp, cen_yp;
-	double wx, wy;
+	DOUBLE wx, wy;
 
 	// Find center and limits of image
 	cen_y  = (int)(ydim / 2);
@@ -108,8 +111,8 @@ __global__ void applyGeometry_2D_kernel(const  T* __restrict__  V1, T* V2, doubl
 
 	x = -cen_x;
 	y = i - cen_y;
-	xp = (double)x * Aref[0] + (double)y * Aref[1] + Aref[2];
-	yp = (double)x * Aref[3] + (double)y * Aref[4] + Aref[5];
+	xp = (DOUBLE)x * Aref[0] + (DOUBLE)y * Aref[1] + Aref[2];
+	yp = (DOUBLE)x * Aref[3] + (DOUBLE)y * Aref[4] + Aref[5];
 	// Calculate this position in the input image according to the
 	// geometrical transformation
 	// they are related by
@@ -144,7 +147,7 @@ __global__ void applyGeometry_2D_kernel(const  T* __restrict__  V1, T* V2, doubl
 	for (int index = tid ; index < xdim;  index += blockDim.x)
 	{
 		bool interp;
-		T tmp;
+		DOUBLE tmp;
 		interp = true;
 		xp = xp_dim[index] ;
 		yp = yp_dim[index] ;
@@ -193,20 +196,20 @@ __global__ void applyGeometry_2D_kernel(const  T* __restrict__  V1, T* V2, doubl
 			// if wx == 0 means that the rightest point is useless for this
 			// interpolation, and even it might not be defined if m1=xdim-1
 			// The same can be said for wy.
-			tmp  = (T)((1 - wy) * (1 - wx) * V1[im_id * image_size + n1 * xdim + m1]);
+			tmp  = (DOUBLE)((1 - wy) * (1 - wx) * V1[im_id * image_size + n1 * xdim + m1]);
 
 			if (wx != 0 && m2 < xdim)
 			{
-				tmp += (T)((1 - wy) * wx * V1[im_id * image_size + n1 * xdim + m2]);
+				tmp += (DOUBLE)((1 - wy) * wx * V1[im_id * image_size + n1 * xdim + m2]);
 			}
 
 			if (wy != 0 && n2 < ydim)
 			{
-				tmp += (T)(wy * (1 - wx) * V1[im_id * image_size + n2 * xdim + m1]);
+				tmp += (DOUBLE)(wy * (1 - wx) * V1[im_id * image_size + n2 * xdim + m1]);
 
 				if (wx != 0 && m2 < xdim)
 				{
-					tmp += (T)(wy * wx * V1[im_id * image_size + n2 * xdim + m2]);
+					tmp += (DOUBLE)(wy * wx * V1[im_id * image_size + n2 * xdim + m2]);
 				}
 			}
 			V2[im_id * image_size + i * xdim + index] = tmp;
@@ -218,12 +221,12 @@ __global__ void applyGeometry_2D_kernel(const  T* __restrict__  V1, T* V2, doubl
 
 	}
 }
-template <typename T>
-void selfTranslate_gpu(T* V1,
-                       double*  Aref_matrxi,
-                       double* exp_old_offset_D,
+//template <typename T>
+void selfTranslate_gpu(DOUBLE* V1,
+                       DOUBLE*  Aref_matrxi,
+                       DOUBLE* exp_old_offset_D,
                        int dim, int  xdim, int ydim, int image_size,  int nr_image,
-                       bool wrap = WRAP, T outside = 0)
+                       bool wrap, DOUBLE outside)
 {
 	int block_size;
 	if (xdim < 32)
@@ -240,26 +243,26 @@ void selfTranslate_gpu(T* V1,
 	}
 	dim3 dimBlock(block_size, 1, 1);
 	dim3 dimGrid(ydim , nr_image, 1);
-	int shared_mem_size = xdim * sizeof(T) * 2 + 9 * sizeof(double);
-	T* temp;
-	cudaMalloc((void**)&temp, image_size * nr_image * sizeof(T));
-	cudaMemcpy(temp, V1, image_size * nr_image * sizeof(T), cudaMemcpyDeviceToDevice);
+	int shared_mem_size = xdim * sizeof(DOUBLE) * 2 + 9 * sizeof(DOUBLE);
+	DOUBLE* temp;
+	cudaMalloc((void**)&temp, image_size * nr_image * sizeof(DOUBLE));
+	cudaMemcpy(temp, V1, image_size * nr_image * sizeof(DOUBLE), cudaMemcpyDeviceToDevice);
 	applyGeometry_2D_kernel <<< dimGrid , dimBlock, shared_mem_size>>>(temp,  V1, Aref_matrxi, exp_old_offset_D, wrap,  xdim,  ydim,  image_size,  outside);
 	cudaFree(temp);
 }
-template void selfTranslate_gpu<double>(double* V1,
-                                        double*  Aref_matrxi,
-                                        double* exp_old_offset_D,
+/*template void selfTranslate_gpu<DOUBLE>(DOUBLE* V1,
+                                        DOUBLE*  Aref_matrxi,
+                                        DOUBLE* exp_old_offset_D,
                                         int dim, int  xdim, int ydim, int image_size,  int nr_image,
-                                        bool wrap = WRAP, double outside = 0);
+                                        bool wrap = WRAP, DOUBLE outside = 0);
 template void selfTranslate_gpu<float>(float* V1,
-                                       double*  Aref_matrxi,
-                                       double* exp_old_offset_D,
+                                       DOUBLE*  Aref_matrxi,
+                                       DOUBLE* exp_old_offset_D,
                                        int dim, int xdim, int ydim, int image_size,  int nr_image,
                                        bool wrap = WRAP, float outside = 0);
-
-template <typename T>
-__global__ void do_norm_correction_kernel(T* image_D, double* normcorr_D, int image_size, double avg_norm_correction)
+*/
+//template <typename T>
+__global__ void do_norm_correction_kernel(DOUBLE* image_D, DOUBLE* normcorr_D, int image_size, DOUBLE avg_norm_correction)
 {
 	int tid = threadIdx.x;
 	int im_id = blockIdx.y;
@@ -273,8 +276,8 @@ __global__ void do_norm_correction_kernel(T* image_D, double* normcorr_D, int im
 	image_D[pixel_id + im_id * image_size] =   image_D[pixel_id + im_id * image_size] * (avg_norm_correction / normcorr_D[im_id ]);
 
 }
-template <typename T>
-void do_norm_correction_gpu(T* image_D, double* normcorr_D, int image_size, int exp_nr_images, double avg_norm_correction)
+//template <typename T>
+void do_norm_correction_gpu(DOUBLE* image_D, DOUBLE* normcorr_D, int image_size, int exp_nr_images, DOUBLE avg_norm_correction)
 {
 	int blk_x = (image_size + BLOCK_SIZE_128 - 1) / BLOCK_SIZE_128;
 	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
@@ -282,10 +285,10 @@ void do_norm_correction_gpu(T* image_D, double* normcorr_D, int image_size, int 
 	do_norm_correction_kernel <<< dimGrid, dimBlock>>>(image_D, normcorr_D, image_size , avg_norm_correction);
 
 }
-template void do_norm_correction_gpu<double>(double* image_D, double* normcorr_D, int image_size, int exp_nr_images, double avg_norm_correction);
-template void do_norm_correction_gpu<float>(float* image_D, double* normcorr_D, int image_size, int exp_nr_images, double avg_norm_correction);
-template <typename T>
-__global__ void scal_images(T* alpha, T* inout, int image_size)
+//template void do_norm_correction_gpu<DOUBLE>(DOUBLE* image_D, DOUBLE* normcorr_D, int image_size, int exp_nr_images, DOUBLE avg_norm_correction);
+//template void do_norm_correction_gpu<float>(float* image_D, DOUBLE* normcorr_D, int image_size, int exp_nr_images, DOUBLE avg_norm_correction);
+//template <typename T>
+__global__ void scal_images(DOUBLE* alpha, DOUBLE* inout, int image_size)
 {
 
 	int tid = threadIdx.x;
@@ -302,8 +305,8 @@ __global__ void scal_images(T* alpha, T* inout, int image_size)
 }
 
 
-template <typename T>
-void relion_gpu_scal(const int N,  double* alpha, double* X, int stride)
+//template <typename T>
+void relion_gpu_scal(const int N,  DOUBLE* alpha, DOUBLE* X, int stride)
 {
 	dim3 dimBlock(BLOCK_SIZE, 1, 1);
 	dim3 dimGrid(N, 1, 1);
@@ -311,8 +314,8 @@ void relion_gpu_scal(const int N,  double* alpha, double* X, int stride)
 }
 
 
-template <typename T>
-__global__ void shift_1D_kernel(T* in, T* out, int xdim, int shift)
+//template <typename T>
+__global__ void shift_1D_kernel(DOUBLE* in, DOUBLE* out, int xdim, int shift)
 {
 
 	int tid = threadIdx.x;
@@ -326,8 +329,8 @@ __global__ void shift_1D_kernel(T* in, T* out, int xdim, int shift)
 	}
 }
 
-template <typename T>
-__global__ void shift_2D_kernel(T* in, T* out, int xdim, int ydim, int xshift, int yshift)
+//template <typename T>
+__global__ void shift_2D_kernel(DOUBLE* in, DOUBLE* out, int xdim, int ydim, int xshift, int yshift)
 {
 
 	int tid_x = threadIdx.x;
@@ -355,8 +358,8 @@ __global__ void shift_2D_kernel(T* in, T* out, int xdim, int ydim, int xshift, i
 
 }
 
-template <typename T>
-__global__ void shift_3D_kernel(T* in, T* out, int xdim, int ydim, int zdim, int xshift, int yshift, int zshift)
+//template <typename T>
+__global__ void shift_3D_kernel(DOUBLE* in, DOUBLE* out, int xdim, int ydim, int zdim, int xshift, int yshift, int zshift)
 {
 	int tid_x = threadIdx.x;
 	int tid_y = threadIdx.y;
@@ -383,8 +386,8 @@ __global__ void shift_3D_kernel(T* in, T* out, int xdim, int ydim, int zdim, int
 		}
 	}
 }
-template <typename T>
-void centerFFT_gpu(T* in, T* out, int nr_images, int dim, int xdim, int ydim, int zdim, bool forward)
+//template <typename T>
+void centerFFT_gpu(DOUBLE* in, DOUBLE* out, int nr_images, int dim, int xdim, int ydim, int zdim, bool forward)
 {
 	dim3 dimBlock(BLOCK_SIZE, 1, 1);
 	dim3 dimBlock2D(BLOCK_X, BLOCK_Y, 1);
@@ -429,25 +432,25 @@ void centerFFT_gpu(T* in, T* out, int nr_images, int dim, int xdim, int ydim, in
 }
 
 // Explicit instantiation
-template void centerFFT_gpu<double>(double* in, double* out, int nr_images, int dim, int xdim, int ydim, int zdim, bool forward);
-template void centerFFT_gpu<float>(float* in, float* out, int nr_images, int dim, int xdim, int ydim, int zdim, bool forward);
+//template void centerFFT_gpu<DOUBLE>(DOUBLE* in, DOUBLE* out, int nr_images, int dim, int xdim, int ydim, int zdim, bool forward);
+//template void centerFFT_gpu<float>(float* in, float* out, int nr_images, int dim, int xdim, int ydim, int zdim, bool forward);
 
-template <typename T>
-__global__ void calculate_local_sqrtXi2_kernel(T* local_Fimgs_D, double* exp_local_sqrtXi2_D, int image_size)
+//template <typename T>
+__global__ void calculate_local_sqrtXi2_kernel(CUFFT_COMPLEX* local_Fimgs_D, DOUBLE* exp_local_sqrtXi2_D, int image_size)
 {
 	int tid = threadIdx.x;
 	int bid = blockIdx.x;
 	int n_loop;
-	double squr_sum;
+	DOUBLE squr_sum;
 	n_loop = (image_size + blockDim.x - 1) / blockDim.x;
-	__shared__ double local_sum[BLOCK_SIZE];
+	__shared__ DOUBLE local_sum[BLOCK_SIZE];
 	local_sum[tid] = 0;
 	squr_sum = 0;
 	for (int i = 0 ; i < n_loop; i++)
 	{
 		if ((tid + i * blockDim.x) < image_size)
 		{
-			T a = local_Fimgs_D[tid + i * blockDim.x + bid * image_size];
+			CUFFT_COMPLEX a = local_Fimgs_D[tid + i * blockDim.x + bid * image_size];
 			squr_sum += (a.x * a.x) + (a.y * a.y);
 		}
 	}
@@ -469,8 +472,8 @@ __global__ void calculate_local_sqrtXi2_kernel(T* local_Fimgs_D, double* exp_loc
 	}
 
 }
-template <typename T>
-void calculate_local_sqrtXi2_gpu(T* local_Fimgs_D, double* exp_local_sqrtXi2_D, int nr_images, int image_size)
+//template <typename T>
+void calculate_local_sqrtXi2_gpu(CUFFT_COMPLEX* local_Fimgs_D, DOUBLE* exp_local_sqrtXi2_D, int nr_images, int image_size)
 {
 	dim3 blockDim(BLOCK_SIZE, 1, 1);
 	dim3 gridDim(nr_images, 1, 1);
@@ -478,13 +481,13 @@ void calculate_local_sqrtXi2_gpu(T* local_Fimgs_D, double* exp_local_sqrtXi2_D, 
 
 }
 
-template void calculate_local_sqrtXi2_gpu<cufftDoubleComplex>(cufftDoubleComplex* local_Fimgs_D, double* exp_local_sqrtXi2_D, int nr_images, int image_size);
-__global__ void calculate_Minvsigma2_kernel(double* exp_Minvsigma2_D, int* local_myMresol_D, double* sigma2_noise_D, int* group_id_D, double sigma2_fudge, int image_size, int myMresol_size, int noise_size_of_group)
+//template void calculate_local_sqrtXi2_gpu<CUFFT_COMPLEX >(CUFFT_COMPLEX * local_Fimgs_D, DOUBLE* exp_local_sqrtXi2_D, int nr_images, int image_size);
+__global__ void calculate_Minvsigma2_kernel(DOUBLE* exp_Minvsigma2_D, int* local_myMresol_D, DOUBLE* sigma2_noise_D, int* group_id_D, DOUBLE sigma2_fudge, int image_size, int myMresol_size, int noise_size_of_group)
 {
 	int tid = threadIdx.x;
 	int num_loop, ires;
 	int group_id = group_id_D[blockIdx.x];
-	double localMinvsigma2;
+	DOUBLE localMinvsigma2;
 	num_loop = (image_size + blockDim.x - 1) / blockDim.x;
 	for (int i = 0; i < num_loop; i++)
 	{
@@ -500,7 +503,7 @@ __global__ void calculate_Minvsigma2_kernel(double* exp_Minvsigma2_D, int* local
 		tid += blockDim.x;
 	}
 }
-void calculate_Minvsigma2_gpu(double* exp_Minvsigma2_D, int* local_myMresol_D, double* sigma2_noise_D, int* group_id_D,  double sigma2_fudge, int nr_images, int image_size, int myMresol_size, int noise_size_of_group)
+void calculate_Minvsigma2_gpu(DOUBLE* exp_Minvsigma2_D, int* local_myMresol_D, DOUBLE* sigma2_noise_D, int* group_id_D,  DOUBLE sigma2_fudge, int nr_images, int image_size, int myMresol_size, int noise_size_of_group)
 {
 	dim3 blockDim(BLOCK_SIZE, 1, 1);
 	dim3 gridDim(nr_images, 1, 1);
@@ -508,11 +511,11 @@ void calculate_Minvsigma2_gpu(double* exp_Minvsigma2_D, int* local_myMresol_D, d
 }
 
 //The ctfref data is stored continues for each particle
-__global__ void calculate_frefctf_Mctf_kernel(cufftDoubleComplex* frefctf_D,
-                                              const cufftDoubleComplex* __restrict__ fref_D,
-                                              const double* __restrict__  mctf_D,
-                                              double* mctf_out_D,
-                                              const double* __restrict__ myscale_D,
+__global__ void calculate_frefctf_Mctf_kernel(CUFFT_COMPLEX * frefctf_D,
+                                              const CUFFT_COMPLEX * __restrict__ fref_D,
+                                              const DOUBLE* __restrict__  mctf_D,
+                                              DOUBLE* mctf_out_D,
+                                              const DOUBLE* __restrict__ myscale_D,
                                               int nr_oversampled_rot,
                                               int image_size,
                                               int nr_images,
@@ -526,7 +529,7 @@ __global__ void calculate_frefctf_Mctf_kernel(cufftDoubleComplex* frefctf_D,
 	int offset_rot = blockIdx.x * image_size;
 	int output_offset = offset_rot + imageIdx * gridDim.x * image_size;
 
-	double frefctf_real, frefctf_imag;
+	DOUBLE frefctf_real, frefctf_imag;
 	for (int i = tid ; i < image_size; i += BLOCK_SIZE)
 	{
 
@@ -551,11 +554,11 @@ __global__ void calculate_frefctf_Mctf_kernel(cufftDoubleComplex* frefctf_D,
 
 }
 
-void calculate_frefctf_Mctf_gpu(cufftDoubleComplex* frefctf_D,
-                                cufftDoubleComplex* fref_D,
-                                double* mctf_D,
-                                double* mctf_out_D,
-                                double* myscale_D,
+void calculate_frefctf_Mctf_gpu(CUFFT_COMPLEX * frefctf_D,
+                                CUFFT_COMPLEX * fref_D,
+                                DOUBLE* mctf_D,
+                                DOUBLE* mctf_out_D,
+                                DOUBLE* myscale_D,
                                 int nr_orients,
                                 int nr_oversampled_rot,
                                 int nr_ipart,
@@ -579,10 +582,10 @@ void calculate_frefctf_Mctf_gpu(cufftDoubleComplex* frefctf_D,
 }
 
 
-__global__ void calculate_frefctf_kernel(cufftDoubleComplex* frefctf_D,
-                                         const  cufftDoubleComplex* __restrict__  fref_D,
-                                         const double* __restrict__ mctf_D,
-                                         const double* __restrict__ myscale_D,
+__global__ void calculate_frefctf_kernel(CUFFT_COMPLEX * frefctf_D,
+                                         const  CUFFT_COMPLEX * __restrict__  fref_D,
+                                         const DOUBLE* __restrict__ mctf_D,
+                                         const DOUBLE* __restrict__ myscale_D,
                                          int nr_oversampled_rot,
                                          int image_size,
                                          int nr_images,
@@ -596,7 +599,7 @@ __global__ void calculate_frefctf_kernel(cufftDoubleComplex* frefctf_D,
 	int offset_rot = blockIdx.x * image_size;
 	int output_offset = offset_rot + imageIdx * gridDim.x * image_size;
 
-	double frefctf_real, frefctf_imag;
+	DOUBLE frefctf_real, frefctf_imag;
 	for (int i = tid; i < image_size ; i += blockDim.x)
 	{
 		frefctf_real = fref_D[i + offset_rot].x;
@@ -619,10 +622,10 @@ __global__ void calculate_frefctf_kernel(cufftDoubleComplex* frefctf_D,
 
 }
 
-__global__ void calculate_frefctf_do_scale_correction_kernel(cufftDoubleComplex* frefctf_D,
-                                                             const  cufftDoubleComplex* __restrict__  fref_D,
-                                                             const double* __restrict__ mctf_D,
-                                                             const double* __restrict__ myscale_D,
+__global__ void calculate_frefctf_do_scale_correction_kernel(CUFFT_COMPLEX * frefctf_D,
+                                                             const  CUFFT_COMPLEX * __restrict__  fref_D,
+                                                             const DOUBLE* __restrict__ mctf_D,
+                                                             const DOUBLE* __restrict__ myscale_D,
                                                              int nr_oversampled_rot,
                                                              int image_size,
                                                              int nr_images)
@@ -633,7 +636,7 @@ __global__ void calculate_frefctf_do_scale_correction_kernel(cufftDoubleComplex*
 	int offset_rot = blockIdx.x * image_size;
 	int output_offset = offset_rot + imageIdx * gridDim.x * image_size;
 
-	double frefctf_real, frefctf_imag;
+	DOUBLE frefctf_real, frefctf_imag;
 	for (int i = tid; i < image_size ; i += blockDim.x)
 	{
 		frefctf_real = fref_D[i + offset_rot].x;
@@ -649,10 +652,10 @@ __global__ void calculate_frefctf_do_scale_correction_kernel(cufftDoubleComplex*
 
 }
 
-__global__ void calculate_frefctf_all_kernel(cufftDoubleComplex* frefctf_D,
-                                             const  cufftDoubleComplex* __restrict__  fref_D,
-                                             const double* __restrict__ mctf_D,
-                                             const double* __restrict__ myscale_D,
+__global__ void calculate_frefctf_all_kernel(CUFFT_COMPLEX * frefctf_D,
+                                             const  CUFFT_COMPLEX * __restrict__  fref_D,
+                                             const DOUBLE* __restrict__ mctf_D,
+                                             const DOUBLE* __restrict__ myscale_D,
                                              int nr_oversampled_rot,
                                              int image_size,
                                              int nr_images)
@@ -662,7 +665,7 @@ __global__ void calculate_frefctf_all_kernel(cufftDoubleComplex* frefctf_D,
 	int offset_rot = blockIdx.x * image_size;
 	int output_offset;
 
-	double frefctf_real, frefctf_imag;
+	DOUBLE frefctf_real, frefctf_imag;
 	for (int i = tid; i < image_size ; i += blockDim.x)
 	{
 		frefctf_real = fref_D[i + offset_rot].x;
@@ -678,10 +681,10 @@ __global__ void calculate_frefctf_all_kernel(cufftDoubleComplex* frefctf_D,
 
 }
 
-__global__ void calculate_frefctf_do_ctf_correction_kernel(cufftDoubleComplex* frefctf_D,
-                                                           const  cufftDoubleComplex* __restrict__  fref_D,
-                                                           const double* __restrict__ mctf_D,
-                                                           const double* __restrict__ myscale_D,
+__global__ void calculate_frefctf_do_ctf_correction_kernel(CUFFT_COMPLEX * frefctf_D,
+                                                           const  CUFFT_COMPLEX * __restrict__  fref_D,
+                                                           const DOUBLE* __restrict__ mctf_D,
+                                                           const DOUBLE* __restrict__ myscale_D,
                                                            int nr_oversampled_rot,
                                                            int image_size,
                                                            int nr_images)
@@ -703,10 +706,10 @@ __global__ void calculate_frefctf_do_ctf_correction_kernel(cufftDoubleComplex* f
 
 }
 
-void  calculate_frefctf_gpu(cufftDoubleComplex* frefctf_D,
-                            cufftDoubleComplex* fref_D,
-                            double* exp_local_Fctfs_D,
-                            double* myscale_D,
+void  calculate_frefctf_gpu(CUFFT_COMPLEX * frefctf_D,
+                            CUFFT_COMPLEX * fref_D,
+                            DOUBLE* exp_local_Fctfs_D,
+                            DOUBLE* myscale_D,
                             int nr_images,
                             int nr_orients,
                             int nr_oversampled_rot,
@@ -751,12 +754,12 @@ void  calculate_frefctf_gpu(cufftDoubleComplex* frefctf_D,
 
 
 }
-extern __shared__ double  thr_wsum_array[ ];
+extern __shared__ DOUBLE  thr_wsum_array[ ];
 
 __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
-    const  cufftDoubleComplex* __restrict__ frefctf_D,
-    const  cufftDoubleComplex* __restrict__ Fimg_shift_D,
-    const double* __restrict__ weight_D,
+    const  CUFFT_COMPLEX * __restrict__ frefctf_D,
+    const  CUFFT_COMPLEX * __restrict__ Fimg_shift_D,
+    const DOUBLE* __restrict__ weight_D,
     const int* __restrict__ weight_index,
     const int* __restrict__ isSignificant_D,
     int Mresol_fine_size,
@@ -768,38 +771,38 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
     int nr_trans,
     int nr_oversampled_trans,
     int nr_valid_orients,
-    double* thr_wsum_sigma2_noise_D,
-    double* thr_wsum_norm_correction_D,
-    double* thr_wsum_scale_correction_XA_D,
-    double* thr_wsum_scale_correction_AA_D,
-    double* data_vs_prior_class_D,
+    DOUBLE* thr_wsum_sigma2_noise_D,
+    DOUBLE* thr_wsum_norm_correction_D,
+    DOUBLE* thr_wsum_scale_correction_XA_D,
+    DOUBLE* thr_wsum_scale_correction_AA_D,
+    DOUBLE* data_vs_prior_class_D,
     int* mresol_fine_D,
     int* group_id_D,
     int thr_wsum_size,
     int ref_dim,
     int modelorientational_prior_mode,
     int exp_nr_psi,
-    double model_prior_offset_class_x,
-    double model_prior_offset_class_y,
-    double* exp_old_offset_D,
-    double* oversampled_translations_D,
-    double* pointer_dir_nonzeroprior_D,
-    double* thr_sumw_group_D,
-    double* thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D,
-    double* exp_prior_D,
-    double* thr_wsum_pdf_direction_D
+    DOUBLE model_prior_offset_class_x,
+    DOUBLE model_prior_offset_class_y,
+    DOUBLE* exp_old_offset_D,
+    DOUBLE* oversampled_translations_D,
+    DOUBLE* pointer_dir_nonzeroprior_D,
+    DOUBLE* thr_sumw_group_D,
+    DOUBLE* thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D,
+    DOUBLE* exp_prior_D,
+    DOUBLE* thr_wsum_pdf_direction_D
 )
 {
 
 	int tid = threadIdx.x;
 	int bid = blockIdx.x;
 
-	double frefctf_real, frefctf_imag;
-	double shift_real, shift_imag;
-	double wdiff2 = 0.;
-	double diff_real, diff_imag;
-	double sumXA, sumA2;
-	double weight;
+	DOUBLE frefctf_real, frefctf_imag;
+	DOUBLE shift_real, shift_imag;
+	DOUBLE wdiff2 = 0.;
+	DOUBLE diff_real, diff_imag;
+	DOUBLE sumXA, sumA2;
+	DOUBLE weight;
 	int part_id, ishift_id, ires, group_id, iover_rot, orient_id, oriend_reorder_id, exp_trans_id, iover_trans_id;
 	int weight_id = weight_index[bid];
 
@@ -813,12 +816,12 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
 	weight = weight_D[bid];
 	group_id = group_id_D[part_id];
 	oriend_reorder_id = isSignificant_D[orient_id];
-	double data_vs_prior_class;
+	DOUBLE data_vs_prior_class;
 
-	double* thr_wsum_norm_correction_SHM = (double*) thr_wsum_array;
-	double* thr_wsum_sigma2_noise_SHM = (double*) &thr_wsum_norm_correction_SHM[BLOCK_SIZE_128];
-	double* thr_wsum_scale_correction_XA_SHM = (double*) &thr_wsum_sigma2_noise_SHM[((thr_wsum_size + 32 - 1) / 32) * 32];
-	double* thr_wsum_scale_correction_AA_SHM = (double*) &thr_wsum_scale_correction_XA_SHM[((thr_wsum_size + 32 - 1) / 32) * 32];
+	DOUBLE* thr_wsum_norm_correction_SHM = (DOUBLE*) thr_wsum_array;
+	DOUBLE* thr_wsum_sigma2_noise_SHM = (DOUBLE*) &thr_wsum_norm_correction_SHM[BLOCK_SIZE_128];
+	DOUBLE* thr_wsum_scale_correction_XA_SHM = (DOUBLE*) &thr_wsum_sigma2_noise_SHM[((thr_wsum_size + 32 - 1) / 32) * 32];
+	DOUBLE* thr_wsum_scale_correction_AA_SHM = (DOUBLE*) &thr_wsum_scale_correction_XA_SHM[((thr_wsum_size + 32 - 1) / 32) * 32];
 
 	thr_wsum_norm_correction_SHM[tid] = 0.;
 	int ref_image_offset = part_id * nr_valid_orients * nr_oversampled_rot * image_size + ((oriend_reorder_id * nr_oversampled_rot + iover_rot) * image_size);
@@ -849,7 +852,7 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
 			wdiff2 = weight * (diff_real * diff_real + diff_imag * diff_imag);
 
 			thr_wsum_norm_correction_SHM[tid] += wdiff2;//wdiff2_D[bid * image_size + tid +i*blockDim.x];
-			atomicAdd(&(thr_wsum_sigma2_noise_SHM[ires]), (double)wdiff2);
+			atomicAdd(&(thr_wsum_sigma2_noise_SHM[ires]), (DOUBLE)wdiff2);
 
 
 			if (do_scale_correction)
@@ -859,12 +862,12 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
 					sumXA = frefctf_real * shift_real;
 					sumXA += frefctf_imag * shift_imag;
 					sumXA *= weight;
-					atomicAdd(&(thr_wsum_scale_correction_XA_SHM[ires]), (double)sumXA);
+					atomicAdd(&(thr_wsum_scale_correction_XA_SHM[ires]), (DOUBLE)sumXA);
 
 					sumA2 = frefctf_real * frefctf_real;
 					sumA2 += frefctf_imag * frefctf_imag;
 					sumA2 *= weight;
-					atomicAdd(&(thr_wsum_scale_correction_AA_SHM[ires]), (double)sumA2);
+					atomicAdd(&(thr_wsum_scale_correction_AA_SHM[ires]), (DOUBLE)sumA2);
 				}
 			}
 		}
@@ -873,9 +876,9 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
 
 	if (tid < thr_wsum_size)
 	{
-		atomicAdd(&(thr_wsum_sigma2_noise_D[group_id * thr_wsum_size + tid]), (double)thr_wsum_sigma2_noise_SHM[tid]);
-		atomicAdd(&(thr_wsum_scale_correction_XA_D[part_id * thr_wsum_size + tid]), (double)thr_wsum_scale_correction_XA_SHM[tid]);
-		atomicAdd(&(thr_wsum_scale_correction_AA_D[part_id * thr_wsum_size + tid]), (double)thr_wsum_scale_correction_AA_SHM[tid]);
+		atomicAdd(&(thr_wsum_sigma2_noise_D[group_id * thr_wsum_size + tid]), (DOUBLE)thr_wsum_sigma2_noise_SHM[tid]);
+		atomicAdd(&(thr_wsum_scale_correction_XA_D[part_id * thr_wsum_size + tid]), (DOUBLE)thr_wsum_scale_correction_XA_SHM[tid]);
+		atomicAdd(&(thr_wsum_scale_correction_AA_D[part_id * thr_wsum_size + tid]), (DOUBLE)thr_wsum_scale_correction_AA_SHM[tid]);
 	}
 
 	for (int s = blockDim.x >> 1; s > 0; s >>= 1)
@@ -890,7 +893,7 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
 
 	if (tid == 0)
 	{
-		atomicAdd(&(thr_wsum_norm_correction_D[part_id]), (double)thr_wsum_norm_correction_SHM[tid]);
+		atomicAdd(&(thr_wsum_norm_correction_D[part_id]), (DOUBLE)thr_wsum_norm_correction_SHM[tid]);
 	}
 
 
@@ -898,38 +901,38 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
 	if (tid == 32)
 	{
 		// Store sum of weights for this group
-		atomicAdd(&(thr_sumw_group_D[group_id]), (double)weight);
+		atomicAdd(&(thr_sumw_group_D[group_id]), (DOUBLE)weight);
 		// Store weights for this class and orientation
-		atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[0]), (double)weight);
+		atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[0]), (DOUBLE)weight);
 	}
 	if (tid == 64)
 	{
 		if (ref_dim == 2)
 		{
 			// Also store weighted offset differences for prior_offsets of each class
-			double x_part = weight * (exp_old_offset_D[part_id] + oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans]);
+			DOUBLE x_part = weight * (exp_old_offset_D[part_id] + oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans]);
 
-			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[2]), (double)x_part);
+			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[2]), (DOUBLE)x_part);
 
 			x_part = weight * (exp_old_offset_D[part_id + nr_images] + oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans + nr_trans * nr_oversampled_trans]);
-			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[3]), (double)x_part);
-			double sum2 = 0;
+			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[3]), (DOUBLE)x_part);
+			DOUBLE sum2 = 0;
 			x_part = model_prior_offset_class_x - exp_old_offset_D[part_id] - oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans];
 			sum2  += x_part * x_part;
 			x_part = model_prior_offset_class_y - exp_old_offset_D[part_id + nr_images] - oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans + nr_trans * nr_oversampled_trans];
 			sum2  += x_part * x_part;
 			// Store weighted sum2 of origin offsets (in Angstroms instead of pixels!!!)
-			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[1]), (double) weight * sum2);
+			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[1]), (DOUBLE) weight * sum2);
 		}
 		else
 		{
-			double sum2 = 0;
-			double x_part =   exp_prior_D[part_id] - exp_old_offset_D[part_id] - oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans];
+			DOUBLE sum2 = 0;
+			DOUBLE x_part =   exp_prior_D[part_id] - exp_old_offset_D[part_id] - oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans];
 			sum2  += x_part * x_part;
 			x_part = exp_prior_D[part_id] - exp_old_offset_D[part_id + nr_images] - oversampled_translations_D[iover_trans_id + exp_trans_id * nr_oversampled_trans + nr_trans * nr_oversampled_trans];
 			sum2  += x_part * x_part;
 			// Store weighted sum2 of origin offsets (in Angstroms instead of pixels!!!)
-			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[1]), (double)(weight * sum2));
+			atomicAdd(&(thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D[1]), (DOUBLE)(weight * sum2));
 		}
 	}
 	if (tid == 96)
@@ -938,22 +941,22 @@ __global__ void calculate_wdiff2_sumXA_Meta_total_kernel(
 		long int idir  = (orient_id / exp_nr_psi);
 		if (modelorientational_prior_mode == 0) //NOPRIOR ==0
 		{
-			atomicAdd(&(thr_wsum_pdf_direction_D[idir]), (double) weight);
+			atomicAdd(&(thr_wsum_pdf_direction_D[idir]), (DOUBLE) weight);
 		}
 		else
 		{
 			// In the case of orientational priors, get the original number of the direction back
 			long int mydir = pointer_dir_nonzeroprior_D[idir]; //sampling.getDirectionNumberAlsoZeroPrior(idir);
-			atomicAdd(&(thr_wsum_pdf_direction_D[mydir]), (double) weight);
+			atomicAdd(&(thr_wsum_pdf_direction_D[mydir]), (DOUBLE) weight);
 		}
 	}
 
 }
 
 void calculate_wdiff2_sumXA_Meta_total_gpu(
-    cufftDoubleComplex* Frecctf_D,
-    cufftDoubleComplex* Fimg_shift_D,
-    double* weight_D,
+    CUFFT_COMPLEX * Frecctf_D,
+    CUFFT_COMPLEX * Fimg_shift_D,
+    DOUBLE* weight_D,
     int* weight_index,
     int*    isSignificant_D,
     int Mresol_fine_size,
@@ -966,33 +969,33 @@ void calculate_wdiff2_sumXA_Meta_total_gpu(
     int nr_trans,
     int nr_oversampled_trans,
     int nr_valid_orients,
-    double* thr_wsum_sigma2_noise_D,
-    double* thr_wsum_norm_correction_D,
-    double* thr_wsum_scale_correction_XA_D,
-    double* thr_wsum_scale_correction_AA_D,
-    double* data_vs_prior_class_D,
+    DOUBLE* thr_wsum_sigma2_noise_D,
+    DOUBLE* thr_wsum_norm_correction_D,
+    DOUBLE* thr_wsum_scale_correction_XA_D,
+    DOUBLE* thr_wsum_scale_correction_AA_D,
+    DOUBLE* data_vs_prior_class_D,
     int* mresol_fine_D,
     int* group_id_D,
     int thr_wsum_size,
     int ref_dim,
     int modelorientational_prior_mode,
     int exp_nr_psi,
-    double model_prior_offset_class_x,
-    double model_prior_offset_class_y,
-    double* exp_old_offset_D,
-    double* oversampled_translations_D,
-    double* pointer_dir_nonzeroprior_D,
-    double* thr_sumw_group_D,
-    double* thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D,
-    double* exp_prior_D,
-    double* thr_wsum_pdf_direction_D
+    DOUBLE model_prior_offset_class_x,
+    DOUBLE model_prior_offset_class_y,
+    DOUBLE* exp_old_offset_D,
+    DOUBLE* oversampled_translations_D,
+    DOUBLE* pointer_dir_nonzeroprior_D,
+    DOUBLE* thr_sumw_group_D,
+    DOUBLE* thr_wsum_pdf_class_sigma2_offset_prior_offsetx_D,
+    DOUBLE* exp_prior_D,
+    DOUBLE* thr_wsum_pdf_direction_D
 )
 
 {
 	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
 	dim3 dimGrid(valid_blocks, 1, 1);
 	int shared_size;
-	shared_size = sizeof(double) * (BLOCK_SIZE_128 + ((thr_wsum_size + 32 - 1) / 32) * 32 * 3);
+	shared_size = sizeof(DOUBLE) * (BLOCK_SIZE_128 + ((thr_wsum_size + 32 - 1) / 32) * 32 * 3);
 
 
 	calculate_wdiff2_sumXA_Meta_total_kernel <<< dimGrid, dimBlock, shared_size>>>(
@@ -1034,12 +1037,12 @@ void calculate_wdiff2_sumXA_Meta_total_gpu(
 
 }
 
-__global__ void calculate_sum_shift_img_kernel(cufftDoubleComplex* Fimg_D,
-                                               double* fweight_D,
-                                               const  cufftDoubleComplex* __restrict__ Fimg_shift_nomask_D,
-                                               const double* __restrict__ Minvsigma2_D,
-                                               const double* __restrict__ weight_D,
-                                               const double* __restrict__ mctf_D,
+__global__ void calculate_sum_shift_img_kernel(CUFFT_COMPLEX * Fimg_D,
+                                               DOUBLE* fweight_D,
+                                               const  CUFFT_COMPLEX * __restrict__ Fimg_shift_nomask_D,
+                                               const DOUBLE* __restrict__ Minvsigma2_D,
+                                               const DOUBLE* __restrict__ weight_D,
+                                               const DOUBLE* __restrict__ mctf_D,
                                                const int* __restrict__ weight_index,
                                                const int* __restrict__ isSignificant_D,
                                                int image_size,
@@ -1056,10 +1059,10 @@ __global__ void calculate_sum_shift_img_kernel(cufftDoubleComplex* Fimg_D,
 	int tid = threadIdx.x;
 	int bid = blockIdx.x;
 	int part_id, ishift_id, iover_rot, orient_id, exp_trans_id, iover_trans_id;
-	double myctf, weightxinvsigma2, weight;
+	DOUBLE myctf, weightxinvsigma2, weight;
 
-	double real, imag, fweight;
-	double Minvsigma2;
+	DOUBLE real, imag, fweight;
+	DOUBLE Minvsigma2;
 	int weight_id = weight_index[bid];
 	part_id = weight_id / (nr_orients * nr_oversampled_rot * nr_trans * nr_oversampled_trans);
 	orient_id = (weight_id % (nr_orients * nr_oversampled_rot * nr_trans * nr_oversampled_trans)) / (nr_oversampled_rot * nr_trans * nr_oversampled_trans);
@@ -1084,19 +1087,19 @@ __global__ void calculate_sum_shift_img_kernel(cufftDoubleComplex* Fimg_D,
 		imag = Fimg_shift_nomask_D[i + shfit_image_offset].y * weightxinvsigma2;
 		fweight = weightxinvsigma2 * myctf;
 
-		atomicAdd(&(Fimg_D[i + (reorder_orient_id * nr_oversampled_rot + iover_rot)*image_size].x), (double)real);
-		atomicAdd(&(Fimg_D[i + (reorder_orient_id * nr_oversampled_rot + iover_rot)*image_size].y), (double)imag);
-		atomicAdd(&(fweight_D[i + (reorder_orient_id * nr_oversampled_rot + iover_rot)*image_size]), (double)fweight);
+		atomicAdd(&(Fimg_D[i + (reorder_orient_id * nr_oversampled_rot + iover_rot)*image_size].x), (DOUBLE)real);
+		atomicAdd(&(Fimg_D[i + (reorder_orient_id * nr_oversampled_rot + iover_rot)*image_size].y), (DOUBLE)imag);
+		atomicAdd(&(fweight_D[i + (reorder_orient_id * nr_oversampled_rot + iover_rot)*image_size]), (DOUBLE)fweight);
 	}
 
 }
 
-void calculate_sum_shift_img_gpu(cufftDoubleComplex* Fimg_D,
-                                 double* fweight_D,
-                                 cufftDoubleComplex* Fimg_shift_nomask_D,
-                                 double* Minvsigma2_D,
-                                 double* weight_D,
-                                 double* mctf_D,
+void calculate_sum_shift_img_gpu(CUFFT_COMPLEX * Fimg_D,
+                                 DOUBLE* fweight_D,
+                                 CUFFT_COMPLEX * Fimg_shift_nomask_D,
+                                 DOUBLE* Minvsigma2_D,
+                                 DOUBLE* weight_D,
+                                 DOUBLE* mctf_D,
                                  int* weight_index,
                                  int*    isSignificant_D,
                                  int image_size,
@@ -1130,14 +1133,14 @@ void calculate_sum_shift_img_gpu(cufftDoubleComplex* Fimg_D,
 
 }
 
-extern __shared__ double  local_weight_array[ ];
-__global__ void calculate_sum_shift_img_kernel_shared(cufftDoubleComplex* Fimg_D,
-                                                      double* fweight_D,
-                                                      const  cufftDoubleComplex* __restrict__ Fimg_shift_nomask_D,
-                                                      const double* __restrict__ Minvsigma2_D,
-                                                      const double* __restrict__ weight_D,
-                                                      const double* __restrict__ mctf_D,
-                                                      const double* __restrict__ exp_Sum_Weigh_particles,
+extern __shared__ DOUBLE  local_weight_array[ ];
+__global__ void calculate_sum_shift_img_kernel_shared(CUFFT_COMPLEX * Fimg_D,
+                                                      DOUBLE* fweight_D,
+                                                      const  CUFFT_COMPLEX * __restrict__ Fimg_shift_nomask_D,
+                                                      const DOUBLE* __restrict__ Minvsigma2_D,
+                                                      const DOUBLE* __restrict__ weight_D,
+                                                      const DOUBLE* __restrict__ mctf_D,
+                                                      const DOUBLE* __restrict__ exp_Sum_Weigh_particles,
                                                       const int* __restrict__ Significant_list_D,
                                                       int nr_images,
                                                       int image_size,
@@ -1150,17 +1153,17 @@ __global__ void calculate_sum_shift_img_kernel_shared(cufftDoubleComplex* Fimg_D
 {
 	int tid = threadIdx.x;
 	int  ishift_id, iover_rot, orient_id;
-	double myctf, weightxinvsigma2;
-	double real, imag, fweight;
-	double Minvsigma2;
+	DOUBLE myctf, weightxinvsigma2;
+	DOUBLE real, imag, fweight;
+	DOUBLE Minvsigma2;
 
 	int ctf_image_offset;
 
 	iover_rot = blockIdx.x % nr_oversampled_rot;
 	orient_id = Significant_list_D[blockIdx.x / nr_oversampled_rot];
 
-	double* sum_weight = (double*) local_weight_array;
-	double* weight_array = (double*) &sum_weight [2 * nr_images];
+	DOUBLE* sum_weight = (DOUBLE*) local_weight_array;
+	DOUBLE* weight_array = (DOUBLE*) &sum_weight [2 * nr_images];
 	if (tid < 2 * nr_images)
 	{
 		sum_weight[tid] = exp_Sum_Weigh_particles[tid];
@@ -1209,13 +1212,13 @@ __global__ void calculate_sum_shift_img_kernel_shared(cufftDoubleComplex* Fimg_D
 	fweight_D[pix_id + blockIdx.x * image_size] += fweight;
 }
 
-void calculate_sum_shift_img_shared_gpu(cufftDoubleComplex* Fimg_D,
-                                        double* fweight_D,
-                                        cufftDoubleComplex* Fimg_shift_nomask_D,
-                                        double* Minvsigma2_D,
-                                        double* weight_D,
-                                        double* mctf_D,
-                                        double* exp_Sum_Weigh_particles,
+void calculate_sum_shift_img_shared_gpu(CUFFT_COMPLEX * Fimg_D,
+                                        DOUBLE* fweight_D,
+                                        CUFFT_COMPLEX * Fimg_shift_nomask_D,
+                                        DOUBLE* Minvsigma2_D,
+                                        DOUBLE* weight_D,
+                                        DOUBLE* mctf_D,
+                                        DOUBLE* exp_Sum_Weigh_particles,
                                         int* Significant_list_D,
                                         int image_size,
                                         int nr_images,
@@ -1229,7 +1232,7 @@ void calculate_sum_shift_img_shared_gpu(cufftDoubleComplex* Fimg_D,
 	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
 	int blk_y = (image_size + BLOCK_SIZE_128 - 1) / BLOCK_SIZE_128;
 	dim3 dimGrid(nr_valid_orients * nr_oversampled_rot, blk_y, 1);
-	int shared_size = nr_trans * nr_oversampled_trans * nr_images * sizeof(double) + nr_images * 2 * sizeof(double);
+	int shared_size = nr_trans * nr_oversampled_trans * nr_images * sizeof(DOUBLE) + nr_images * 2 * sizeof(DOUBLE);
 	calculate_sum_shift_img_kernel_shared <<< dimGrid, dimBlock, shared_size>>>(Fimg_D,
 	                                                                            fweight_D,
 	                                                                            Fimg_shift_nomask_D,
@@ -1248,10 +1251,10 @@ void calculate_sum_shift_img_shared_gpu(cufftDoubleComplex* Fimg_D,
 	                                                                           );
 
 }
-__global__ void calculate_diff2_no_do_squared_difference_kernel(double* diff2_D,
-                                                                cufftDoubleComplex* frefctf_D,
-                                                                cufftDoubleComplex* Fimg_shift_D,
-                                                                double* exp_local_sqrtXi2_D,
+__global__ void calculate_diff2_no_do_squared_difference_kernel(DOUBLE* diff2_D,
+                                                                CUFFT_COMPLEX * frefctf_D,
+                                                                CUFFT_COMPLEX * Fimg_shift_D,
+                                                                DOUBLE* exp_local_sqrtXi2_D,
                                                                 int* valid_orient_trans_index_D,
                                                                 int* valid_orient_prefix_sum,
                                                                 int exp_nr_particles,
@@ -1269,11 +1272,11 @@ __global__ void calculate_diff2_no_do_squared_difference_kernel(double* diff2_D,
 	int orient_id = (valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] % (exp_nr_orients * exp_nr_trans)) / (exp_nr_trans);
 	int trans_id = (valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] % exp_nr_trans);
 
-	__shared__ double diff2_array[BLOCK_SIZE], suma2_array[BLOCK_SIZE];
+	__shared__ DOUBLE diff2_array[BLOCK_SIZE], suma2_array[BLOCK_SIZE];
 	diff2_array[tid] = 0.;
 	suma2_array[tid] = 0.;
 
-	double suma2_real = 0., suma2_imag = 0.;
+	DOUBLE suma2_real = 0., suma2_imag = 0.;
 
 	int oversampled_rot_id =  bid_x % (exp_nr_oversampled_rot * exp_nr_oversampled_trans) / exp_nr_oversampled_trans;
 	int oversampled_trans_id =  bid_x % exp_nr_oversampled_trans;
@@ -1282,8 +1285,8 @@ __global__ void calculate_diff2_no_do_squared_difference_kernel(double* diff2_D,
 	int reordered_orient_id = valid_orient_prefix_sum[orient_id];
 	int ref_image_offset = (part_id * nr_valid_orients * exp_nr_oversampled_rot + reordered_orient_id * exp_nr_oversampled_rot + oversampled_rot_id) * image_size;
 
-	const  cufftDoubleComplex* __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset]; //(part_id+(reordered_orient_id*exp_nr_oversampled_rot+oversampled_rot_id)*exp_nr_particles)
-	const  cufftDoubleComplex* __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];  //shift_id * image_size
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset]; //(part_id+(reordered_orient_id*exp_nr_oversampled_rot+oversampled_rot_id)*exp_nr_particles)
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];  //shift_id * image_size
 
 
 	for (int i = tid; i < image_size; i += BLOCK_SIZE)
@@ -1313,10 +1316,10 @@ __global__ void calculate_diff2_no_do_squared_difference_kernel(double* diff2_D,
 	}
 }
 
-void calculate_diff2_no_do_squared_difference_gpu(double* diff2_D,
-                                                  cufftDoubleComplex* frefctf_D,
-                                                  cufftDoubleComplex* Fimg_shift_D,
-                                                  double* exp_local_sqrtXi2_D,
+void calculate_diff2_no_do_squared_difference_gpu(DOUBLE* diff2_D,
+                                                  CUFFT_COMPLEX * frefctf_D,
+                                                  CUFFT_COMPLEX * Fimg_shift_D,
+                                                  DOUBLE* exp_local_sqrtXi2_D,
                                                   int* valid_orient_trans_index_D,
                                                   int* valid_orient_prefix_sum,
                                                   int exp_nr_particles,
@@ -1350,11 +1353,11 @@ void calculate_diff2_no_do_squared_difference_gpu(double* diff2_D,
 
 
 
-__global__ void calculate_diff2_do_squared_difference_kernel(double* diff2_D,
-                                                             const  cufftDoubleComplex* __restrict__  frefctf_D,
-                                                             const  cufftDoubleComplex* __restrict__  Fimg_shift_D,
-                                                             double* exp_highres_Xi2_imgs_D,
-                                                             double* Minvsigma2_D,
+__global__ void calculate_diff2_do_squared_difference_kernel(DOUBLE* diff2_D,
+                                                             const  CUFFT_COMPLEX * __restrict__  frefctf_D,
+                                                             const  CUFFT_COMPLEX * __restrict__  Fimg_shift_D,
+                                                             DOUBLE* exp_highres_Xi2_imgs_D,
+                                                             DOUBLE* Minvsigma2_D,
                                                              int* valid_orient_trans_index_D,
                                                              int* valid_orient_prefix_sum,
                                                              int exp_nr_particles,
@@ -1380,15 +1383,15 @@ __global__ void calculate_diff2_do_squared_difference_kernel(double* diff2_D,
 	int reordered_orient_id = valid_orient_prefix_sum[orient_id];
 	int ref_image_offset = (part_id * nr_valid_orients * exp_nr_oversampled_rot + reordered_orient_id * exp_nr_oversampled_rot + oversampled_rot_id) * image_size;
 
-	__shared__ double diff2_array[BLOCK_SIZE_128];
+	__shared__ DOUBLE diff2_array[BLOCK_SIZE_128];
 	diff2_array[tid] = 0.;
 
-	const  cufftDoubleComplex* __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset];
-	const  cufftDoubleComplex* __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset];
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];
 
-	double* thisthread_Minvsigma2_D = &Minvsigma2_D[part_id * image_size];
+	DOUBLE* thisthread_Minvsigma2_D = &Minvsigma2_D[part_id * image_size];
 
-	double diff2_real = 0., diff2_imag = 0.;
+	DOUBLE diff2_real = 0., diff2_imag = 0.;
 	for (int i = tid; i < image_size; i += blockDim.x)
 	{
 		diff2_real = thisthread_Frefctf_D[i].x - thisthread_Fimg_shift_D[i].x;
@@ -1413,11 +1416,11 @@ __global__ void calculate_diff2_do_squared_difference_kernel(double* diff2_D,
 }
 
 
-void calculate_diff2_do_squared_difference_gpu(double* diff2_D,
-                                               cufftDoubleComplex* frefctf_D,
-                                               cufftDoubleComplex* Fimg_shift_D,
-                                               double* exp_highres_Xi2_imgs_D,
-                                               double* Minvsigma2_D,
+void calculate_diff2_do_squared_difference_gpu(DOUBLE* diff2_D,
+                                               CUFFT_COMPLEX * frefctf_D,
+                                               CUFFT_COMPLEX * Fimg_shift_D,
+                                               DOUBLE* exp_highres_Xi2_imgs_D,
+                                               DOUBLE* Minvsigma2_D,
                                                int* valid_orient_trans_index_D,
                                                int* valid_orient_prefix_sum,
                                                int exp_nr_particles,
@@ -1449,7 +1452,7 @@ void calculate_diff2_do_squared_difference_gpu(double* diff2_D,
 	                                                                      image_size);
 }
 
-__global__ void init_exp_mweight_kernel(double* exp_Mweight_D, double c, int size)
+__global__ void init_exp_mweight_kernel(DOUBLE* exp_Mweight_D, DOUBLE c, int size)
 {
 	int tid = threadIdx.x;
 	int offset = blockIdx.x * BLOCK_SIZE ;
@@ -1462,7 +1465,7 @@ __global__ void init_exp_mweight_kernel(double* exp_Mweight_D, double c, int siz
 }
 
 
-void init_exp_mweight_gpu(double* exp_Mweight_D, double c, int size)
+void init_exp_mweight_gpu(DOUBLE* exp_Mweight_D, DOUBLE c, int size)
 {
 	dim3 dimBlock(BLOCK_SIZE, 1, 1);
 	dim3 dimGrid(size / BLOCK_SIZE + 1, 1, 1);
@@ -1470,7 +1473,7 @@ void init_exp_mweight_gpu(double* exp_Mweight_D, double c, int size)
 
 }
 
-__global__ void init_exp_min_diff2_kernel(double* exp_min_diff2_D, double c, int size)
+__global__ void init_exp_min_diff2_kernel(DOUBLE* exp_min_diff2_D, DOUBLE c, int size)
 {
 	int tid = threadIdx.x;
 	int offset = blockIdx.x * BLOCK_SIZE ;
@@ -1483,7 +1486,7 @@ __global__ void init_exp_min_diff2_kernel(double* exp_min_diff2_D, double c, int
 }
 
 
-void init_exp_min_diff2_gpu(double* exp_min_diff2_D, double c, int size)
+void init_exp_min_diff2_gpu(DOUBLE* exp_min_diff2_D, DOUBLE c, int size)
 {
 	dim3 dimBlock(BLOCK_SIZE, 1, 1);
 	dim3 dimGrid(size / BLOCK_SIZE + 1, 1, 1);
@@ -1491,13 +1494,13 @@ void init_exp_min_diff2_gpu(double* exp_min_diff2_D, double c, int size)
 }
 
 __global__ void calculate_weight_kernel(const int nr_particles,
-                                        double* exp_sum_weight_D,
+                                        DOUBLE* exp_sum_weight_D,
                                         int* exp_none_zero_number,
-                                        double* max_weight,
-                                        double* exp_Mweight_D,
-                                        const  double* __restrict__ exp_min_diff2_D,
-                                        const  double* __restrict__ pdf_orientation_D,
-                                        const  double* __restrict__ pdf_offset_D,
+                                        DOUBLE* max_weight,
+                                        DOUBLE* exp_Mweight_D,
+                                        const  DOUBLE* __restrict__ exp_min_diff2_D,
+                                        const  DOUBLE* __restrict__ pdf_orientation_D,
+                                        const  DOUBLE* __restrict__ pdf_offset_D,
                                         long int xdim_Mweight,
                                         int iclass_min,
                                         int iclass_max,
@@ -1513,7 +1516,7 @@ __global__ void calculate_weight_kernel(const int nr_particles,
 	int ipart  = blockIdx.y;
 	int tid = threadIdx.x;
 	int index = bid_x * blockDim.x + tid;
-	__shared__ double local_sum_weight[BLOCK_SIZE_128];
+	__shared__ DOUBLE local_sum_weight[BLOCK_SIZE_128];
 	__shared__ int none_zeor_weight[BLOCK_SIZE_128];
 	local_sum_weight[tid] = 0.;
 	none_zeor_weight[tid] = 0;
@@ -1527,8 +1530,8 @@ __global__ void calculate_weight_kernel(const int nr_particles,
 	int iorient = index / (exp_nr_trans * exp_nr_oversampled_rot * exp_nr_oversampled_trans) % nr_orients;
 	int itrans = index / (exp_nr_oversampled_rot * exp_nr_oversampled_trans) % exp_nr_trans;
 
-	double weight = pdf_orientation_D[(ipart * model_nr_classes + (iclass)) * nr_orients + iorient] * pdf_offset_D[(ipart * model_nr_classes + (iclass)) * exp_nr_trans + itrans];
-	double* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * xdim_Mweight + iclass_min * nr_orients * exp_nr_trans * exp_nr_oversampled_rot * exp_nr_oversampled_trans];
+	DOUBLE weight = pdf_orientation_D[(ipart * model_nr_classes + (iclass)) * nr_orients + iorient] * pdf_offset_D[(ipart * model_nr_classes + (iclass)) * exp_nr_trans + itrans];
+	DOUBLE* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * xdim_Mweight + iclass_min * nr_orients * exp_nr_trans * exp_nr_oversampled_rot * exp_nr_oversampled_trans];
 
 	if (thisthread_exp_Mweight_D[index] < 0.)
 	{
@@ -1536,7 +1539,7 @@ __global__ void calculate_weight_kernel(const int nr_particles,
 	}
 	else
 	{
-		double diff2 = thisthread_exp_Mweight_D[index] - exp_min_diff2_D[ipart];
+		DOUBLE diff2 = thisthread_exp_Mweight_D[index] - exp_min_diff2_D[ipart];
 		if (diff2 > 700.)
 		{
 			thisthread_exp_Mweight_D[index] = 0.;
@@ -1570,13 +1573,13 @@ __global__ void calculate_weight_kernel(const int nr_particles,
 }
 
 void calculate_weight_gpu(const int nr_particles,
-                          double* exp_sum_weight_D,
+                          DOUBLE* exp_sum_weight_D,
                           int* exp_none_zero_number,
-                          double* max_weight,
-                          double* exp_Mweight_D,
-                          double* exp_min_diff2_D,
-                          double* pdf_orientation_D,
-                          double* pdf_offset_D,
+                          DOUBLE* max_weight,
+                          DOUBLE* exp_Mweight_D,
+                          DOUBLE* exp_min_diff2_D,
+                          DOUBLE* pdf_orientation_D,
+                          DOUBLE* pdf_offset_D,
                           long int xdim_Mweight,
                           int iclass_min,
                           int iclass_max,
@@ -1612,9 +1615,9 @@ void calculate_weight_gpu(const int nr_particles,
 
 
 __global__ void calculate_weight_first_iter_pass0_kernel(
-    double* exp_Mweight_D,
+    DOUBLE* exp_Mweight_D,
     bool* exp_Mcoarse_significant_D,
-    const  double* __restrict__ exp_min_diff2_D,
+    const  DOUBLE* __restrict__ exp_min_diff2_D,
     long int xdim_Mweight,
     int iclass_min,
     int iclass_max,
@@ -1631,7 +1634,7 @@ __global__ void calculate_weight_first_iter_pass0_kernel(
 		return;
 	}
 
-	double* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * xdim_Mweight + iclass_min * nr_elements];
+	DOUBLE* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * xdim_Mweight + iclass_min * nr_elements];
 	bool* thisthread_exp_Mcoarse_significant_D = &exp_Mcoarse_significant_D[ipart * xdim_Mweight + iclass_min * nr_elements];
 	if (thisthread_exp_Mweight_D[index]  == exp_min_diff2_D[ipart])
 	{
@@ -1647,8 +1650,8 @@ __global__ void calculate_weight_first_iter_pass0_kernel(
 
 }
 __global__ void calculate_weight_first_iter_pass1_kernel(
-    double* exp_Mweight_D,
-    const  double* __restrict__ exp_min_diff2_D,
+    DOUBLE* exp_Mweight_D,
+    const  DOUBLE* __restrict__ exp_min_diff2_D,
     long int xdim_Mweight,
     int iclass_min,
     int iclass_max,
@@ -1665,7 +1668,7 @@ __global__ void calculate_weight_first_iter_pass1_kernel(
 		return;
 	}
 
-	double* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * xdim_Mweight + iclass_min * nr_elements];
+	DOUBLE* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * xdim_Mweight + iclass_min * nr_elements];
 	if (thisthread_exp_Mweight_D[index]  == exp_min_diff2_D[ipart])
 	{
 		thisthread_exp_Mweight_D[index] = 1.;
@@ -1677,9 +1680,9 @@ __global__ void calculate_weight_first_iter_pass1_kernel(
 	}
 
 }
-void calculate_weight_first_iter_gpu(double* exp_Mweight_D,
+void calculate_weight_first_iter_gpu(DOUBLE* exp_Mweight_D,
                                      bool* exp_Mcoarse_significant_D,
-                                     double* exp_min_diff2_D,
+                                     DOUBLE* exp_min_diff2_D,
                                      const int nr_particles,
                                      long int xdim_Mweight,
                                      int iclass_min,
@@ -1711,9 +1714,9 @@ void calculate_weight_first_iter_gpu(double* exp_Mweight_D,
 }
 
 
-__global__ void calculate_A_2d_kernel(cufftDoubleComplex* Fref_all_dev,
-                                      const double*  __restrict__ A_D,
-                                      const cufftDoubleComplex* __restrict__ data_D,
+__global__ void calculate_A_2d_kernel(CUFFT_COMPLEX * Fref_all_dev,
+                                      const DOUBLE*  __restrict__ A_D,
+                                      const CUFFT_COMPLEX * __restrict__ data_D,
                                       bool inv,
                                       int padding_factor,
                                       int r_max,
@@ -1742,13 +1745,13 @@ __global__ void calculate_A_2d_kernel(cufftDoubleComplex* Fref_all_dev,
 	int max_tid = f2d_y * my_r_max;
 	int max_r2 = (my_r_max - 1) * (my_r_max - 1);
 
-	double fx, fy, xp, yp;
+	DOUBLE fx, fy, xp, yp;
 	int x0, x1, y0, y1, y, r2;
 	bool is_neg_x;
-	cufftDoubleComplex d00, d01, d10, d11, dx0, dx1;
+	CUFFT_COMPLEX  d00, d01, d10, d11, dx0, dx1;
 
 	int i, x;
-	__shared__ double Ainv[3 * 3];
+	__shared__ DOUBLE Ainv[3 * 3];
 
 	// f2d should already be in the right size (ori_size,orihalfdim)
 	// AND the points outside max_r should already be zero...
@@ -1756,13 +1759,13 @@ __global__ void calculate_A_2d_kernel(cufftDoubleComplex* Fref_all_dev,
 	{
 		if (inv)
 		{
-			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 		else
 		{
 			int inv_row = tid / 3;
 			int inv_vol = tid % 3;
-			Ainv[tid] = A_D[inv_vol * 3 + inv_row + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[inv_vol * 3 + inv_row + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 	}
 	__syncthreads();
@@ -1839,9 +1842,9 @@ __global__ void calculate_A_2d_kernel(cufftDoubleComplex* Fref_all_dev,
 		}
 	}
 }
-__global__ void calculate_A_3d_kernel(cufftDoubleComplex* Fref_all_D,
-                                      const double*  __restrict__ A_D,
-                                      const cufftDoubleComplex* __restrict__ data_D,
+__global__ void calculate_A_3d_kernel(CUFFT_COMPLEX * Fref_all_D,
+                                      const DOUBLE*  __restrict__ A_D,
+                                      const CUFFT_COMPLEX * __restrict__ data_D,
                                       bool inv,
                                       int padding_factor,
                                       int r_max,
@@ -1870,14 +1873,14 @@ __global__ void calculate_A_3d_kernel(cufftDoubleComplex* Fref_all_D,
 	int max_tid = f2d_y * my_r_max;
 	int max_r2 = (my_r_max - 1) * (my_r_max - 1);
 
-	double fx, fy, fz, xp, yp, zp;
+	DOUBLE fx, fy, fz, xp, yp, zp;
 	int x0, x1, y0, y1, z0, z1, y, r2;
 	bool is_neg_x;
-	cufftDoubleComplex d000, d001, d010, d011, d100, d101, d110, d111;
-	cufftDoubleComplex dx00, dx01, dx10, dx11, dxy0, dxy1;
+	CUFFT_COMPLEX  d000, d001, d010, d011, d100, d101, d110, d111;
+	CUFFT_COMPLEX  dx00, dx01, dx10, dx11, dxy0, dxy1;
 
 	int i, x;
-	__shared__ double Ainv[3 * 3];
+	__shared__ DOUBLE Ainv[3 * 3];
 
 	// f2d should already be in the right size (ori_size,orihalfdim)
 	// AND the points outside max_r should already be zero...
@@ -1885,13 +1888,13 @@ __global__ void calculate_A_3d_kernel(cufftDoubleComplex* Fref_all_D,
 	{
 		if (inv)
 		{
-			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 		else
 		{
 			int inv_row = tid / 3;
 			int inv_vol = tid % 3;
-			Ainv[tid] = A_D[inv_vol * 3 + inv_row + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[inv_vol * 3+ inv_row + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 	}
 	__syncthreads();
@@ -1992,7 +1995,7 @@ __global__ void calculate_A_3d_kernel(cufftDoubleComplex* Fref_all_D,
 	}
 }
 
-void get2DFourierTransform_gpu(cufftDoubleComplex* Fref_all_D, double* A_D, cufftDoubleComplex* data_D, bool inv, int padding_factor, int r_max, int r_min_nn, int f2d_x, int f2d_y, int data_x, int data_y, int data_z, int data_starty, int data_startz, int nr_A, int ref_dim)
+void get2DFourierTransform_gpu(CUFFT_COMPLEX * Fref_all_D, DOUBLE* A_D, CUFFT_COMPLEX * data_D, bool inv, int padding_factor, int r_max, int r_min_nn, int f2d_x, int f2d_y, int data_x, int data_y, int data_z, int data_starty, int data_startz, int nr_A, int ref_dim)
 {
 	if (nr_A > 0)
 	{
@@ -2004,18 +2007,19 @@ void get2DFourierTransform_gpu(cufftDoubleComplex* Fref_all_D, double* A_D, cuff
 		}
 		else
 		{
+			//std::cout<<"Doing 3D  FourierTransform" << data_x << "  " << data_y << "  " << data_z<< std::endl;
 			calculate_A_3d_kernel <<< dimGrid, dimBlock>>>(Fref_all_D, A_D, data_D, inv, padding_factor,  r_max, r_min_nn, f2d_x, f2d_y, data_x, data_y, data_z, data_starty, data_startz, nr_A);
 		}
 	}
 }
 
 
-__global__ void  backrotate2D_kernel(cufftDoubleComplex* f2d_D,
-                                     double* A_D,
+__global__ void  backrotate2D_kernel(CUFFT_COMPLEX * f2d_D,
+                                     DOUBLE* A_D,
                                      bool inv,
-                                     double* Mweight_D,
-                                     cufftDoubleComplex* data_D,
-                                     double* weight_D,
+                                     DOUBLE* Mweight_D,
+                                     CUFFT_COMPLEX * data_D,
+                                     DOUBLE* weight_D,
                                      int padding_factor,
                                      int r_max,
                                      int max_r2_D,
@@ -2028,13 +2032,13 @@ __global__ void  backrotate2D_kernel(cufftDoubleComplex* f2d_D,
                                      int out_XDIM
                                     )
 {
-	double fx, fy, mfx, mfy, xp, yp;
+	DOUBLE fx, fy, mfx, mfy, xp, yp;
 	int first_x, x0, x1, y0, y1, y, y2, r2;
 	bool is_neg_x;
-	double dd000, dd001, dd010, dd011;
-	cufftDoubleComplex  my_val;
-	__shared__ double Ainv[3 * 3];
-	double my_weight = 1.;
+	DOUBLE dd000, dd001, dd010, dd011;
+	CUFFT_COMPLEX   my_val;
+	__shared__ DOUBLE Ainv[3 * 3];
+	DOUBLE my_weight = 1.;
 	int tid_x = threadIdx.x;
 	int tid_y = threadIdx.y;
 	int tid = tid_x + tid_y * blockDim.x;
@@ -2045,13 +2049,13 @@ __global__ void  backrotate2D_kernel(cufftDoubleComplex* f2d_D,
 	{
 		if (inv)
 		{
-			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 		else
 		{
 			int inv_row = tid / 3;
 			int inv_vol = tid % 3;
-			Ainv[tid] = A_D[inv_vol * 3 + inv_row + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[inv_vol * 3 + inv_row + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 	}
 	__syncthreads();
@@ -2142,21 +2146,21 @@ __global__ void  backrotate2D_kernel(cufftDoubleComplex* f2d_D,
 					dd010 = fy * mfx;
 					dd011 = fy *  fx;
 
-					atomicAdd(&(data_D[y0 * out_XDIM + x0].x), (double)(dd000 * my_val.x));
-					atomicAdd(&(data_D[y0 * out_XDIM + x0].y), (double)(dd000 * my_val.y));
-					atomicAdd(&(data_D[y0 * out_XDIM + x1].x), (double)(dd001 * my_val.x));
-					atomicAdd(&(data_D[y0 * out_XDIM + x1].y), (double)(dd001 * my_val.y));
+					atomicAdd(&(data_D[y0 * out_XDIM + x0].x), (DOUBLE)(dd000 * my_val.x));
+					atomicAdd(&(data_D[y0 * out_XDIM + x0].y), (DOUBLE)(dd000 * my_val.y));
+					atomicAdd(&(data_D[y0 * out_XDIM + x1].x), (DOUBLE)(dd001 * my_val.x));
+					atomicAdd(&(data_D[y0 * out_XDIM + x1].y), (DOUBLE)(dd001 * my_val.y));
 
-					atomicAdd(&(data_D[y1 * out_XDIM + x0].x), (double)(dd010 * my_val.x));
-					atomicAdd(&(data_D[y1 * out_XDIM + x0].y), (double)(dd010 * my_val.y));
-					atomicAdd(&(data_D[y1 * out_XDIM + x1].x), (double)(dd011 * my_val.x));
-					atomicAdd(&(data_D[y1 * out_XDIM + x1].y), (double)(dd011 * my_val.y));
+					atomicAdd(&(data_D[y1 * out_XDIM + x0].x), (DOUBLE)(dd010 * my_val.x));
+					atomicAdd(&(data_D[y1 * out_XDIM + x0].y), (DOUBLE)(dd010 * my_val.y));
+					atomicAdd(&(data_D[y1 * out_XDIM + x1].x), (DOUBLE)(dd011 * my_val.x));
+					atomicAdd(&(data_D[y1 * out_XDIM + x1].y), (DOUBLE)(dd011 * my_val.y));
 
-					atomicAdd(&(weight_D[y0 * out_XDIM + x0]), (double)(dd000 * my_weight));
-					atomicAdd(&(weight_D[y0 * out_XDIM + x1]), (double)(dd001 * my_weight));
+					atomicAdd(&(weight_D[y0 * out_XDIM + x0]), (DOUBLE)(dd000 * my_weight));
+					atomicAdd(&(weight_D[y0 * out_XDIM + x1]), (DOUBLE)(dd001 * my_weight));
 
-					atomicAdd(&(weight_D[y1 * out_XDIM + x0]), (double)(dd010 * my_weight));
-					atomicAdd(&(weight_D[y1 * out_XDIM + x1]), (double)(dd011 * my_weight));
+					atomicAdd(&(weight_D[y1 * out_XDIM + x0]), (DOUBLE)(dd010 * my_weight));
+					atomicAdd(&(weight_D[y1 * out_XDIM + x1]), (DOUBLE)(dd011 * my_weight));
 
 				} // endif TRILINEAR
 				else if (interpolator == 0)  //NEAREST_NEIGHBOUR 0
@@ -2167,16 +2171,16 @@ __global__ void  backrotate2D_kernel(cufftDoubleComplex* f2d_D,
 
 					if (x0 < 0)
 					{
-						atomicAdd(&(data_D[-y0 * out_XDIM - x0].x), (double) my_val.x);
-						atomicAdd(&(data_D[-y0 * out_XDIM - x0].y), (double)(-my_val.y));
-						atomicAdd(&(weight_D[-y0 * out_XDIM - x0]), (double) my_weight);
+						atomicAdd(&(data_D[-y0 * out_XDIM - x0].x), (DOUBLE) my_val.x);
+						atomicAdd(&(data_D[-y0 * out_XDIM - x0].y), (DOUBLE)(-my_val.y));
+						atomicAdd(&(weight_D[-y0 * out_XDIM - x0]), (DOUBLE) my_weight);
 
 					}
 					else
 					{
-						atomicAdd(&(data_D[y0 * out_XDIM + x0].x), (double) my_val.x);
-						atomicAdd(&(data_D[y0 * out_XDIM + x0].y), (double) my_val.y);
-						atomicAdd(&(weight_D[y0 * out_XDIM + x0]), (double) my_weight);
+						atomicAdd(&(data_D[y0 * out_XDIM + x0].x), (DOUBLE) my_val.x);
+						atomicAdd(&(data_D[y0 * out_XDIM + x0].y), (DOUBLE) my_val.y);
+						atomicAdd(&(weight_D[y0 * out_XDIM + x0]), (DOUBLE) my_weight);
 					}
 
 				} // endif NEAREST_NEIGHBOUR
@@ -2186,12 +2190,12 @@ __global__ void  backrotate2D_kernel(cufftDoubleComplex* f2d_D,
 	} // endif y-loop
 }
 
-__global__ void  backproject_kernel(const cufftDoubleComplex* __restrict__ f2d_D,
-                                    const double* __restrict__ A_D,
+__global__ void  backproject_kernel(const CUFFT_COMPLEX * __restrict__ f2d_D,
+                                    const DOUBLE* __restrict__ A_D,
                                     bool inv,
-                                    const double* __restrict__ Mweight_D,
-                                    cufftDoubleComplex* data_D,
-                                    double* weight_D,
+                                    const DOUBLE* __restrict__ Mweight_D,
+                                    CUFFT_COMPLEX * data_D,
+                                    DOUBLE* weight_D,
                                     int padding_factor,
                                     int r_max,
                                     int max_r2_D,
@@ -2206,13 +2210,13 @@ __global__ void  backproject_kernel(const cufftDoubleComplex* __restrict__ f2d_D
                                     int out_XDIM
                                    )
 {
-	double fx, fy, fz, mfx, mfy, mfz, xp, yp, zp;
+	DOUBLE fx, fy, fz, mfx, mfy, mfz, xp, yp, zp;
 	int first_x, x0, x1, y0, y1, z0, z1, y, y2, r2;
 	bool is_neg_x;
-	double dd000, dd001, dd010, dd011, dd100, dd101, dd110, dd111;
-	cufftDoubleComplex  my_val;
-	__shared__ double Ainv[3 * 3];
-	double my_weight = 1.;
+	DOUBLE dd000, dd001, dd010, dd011, dd100, dd101, dd110, dd111;
+	CUFFT_COMPLEX   my_val;
+	__shared__ DOUBLE Ainv[3 * 3];
+	DOUBLE my_weight = 1.;
 	int tid_x = threadIdx.x;
 	int tid_y = threadIdx.y;
 	int tid = tid_x + tid_y * blockDim.x;
@@ -2223,13 +2227,13 @@ __global__ void  backproject_kernel(const cufftDoubleComplex* __restrict__ f2d_D
 	{
 		if (inv)
 		{
-			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[tid + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 		else
 		{
 			int inv_row = tid / 3;
 			int inv_vol = tid % 3;
-			Ainv[tid] = A_D[inv_vol * 3 + inv_row + blockIdx.x * 9] * (double)padding_factor;
+			Ainv[tid] = A_D[inv_vol * 3 + inv_row + blockIdx.x * 9] * (DOUBLE)padding_factor;
 		}
 	}
 	__syncthreads();
@@ -2332,37 +2336,37 @@ __global__ void  backproject_kernel(const cufftDoubleComplex* __restrict__ f2d_D
 					dd110 =  fz *  fy * mfx;
 					dd111 =  fz *  fy *  fx;
 
-					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].x), (double)(dd000 * my_val.x));
-					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].y), (double)(dd000 * my_val.y));
-					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x1].x), (double)(dd001 * my_val.x));
-					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x1].y), (double)(dd001 * my_val.y));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].x), (DOUBLE)(dd000 * my_val.x));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].y), (DOUBLE)(dd000 * my_val.y));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x1].x), (DOUBLE)(dd001 * my_val.x));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x1].y), (DOUBLE)(dd001 * my_val.y));
 
-					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x0].x), (double)(dd010 * my_val.x));
-					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x0].y), (double)(dd010 * my_val.y));
-					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x1].x), (double)(dd011 * my_val.x));
-					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x1].y), (double)(dd011 * my_val.y));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x0].x), (DOUBLE)(dd010 * my_val.x));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x0].y), (DOUBLE)(dd010 * my_val.y));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x1].x), (DOUBLE)(dd011 * my_val.x));
+					atomicAdd(&(data_D[z0 * out_YXDIM + y1 * out_XDIM + x1].y), (DOUBLE)(dd011 * my_val.y));
 
-					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x0].x), (double)(dd100 * my_val.x));
-					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x0].y), (double)(dd100 * my_val.y));
-					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x1].x), (double)(dd101 * my_val.x));
-					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x1].y), (double)(dd101 * my_val.y));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x0].x), (DOUBLE)(dd100 * my_val.x));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x0].y), (DOUBLE)(dd100 * my_val.y));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x1].x), (DOUBLE)(dd101 * my_val.x));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y0 * out_XDIM + x1].y), (DOUBLE)(dd101 * my_val.y));
 
-					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x0].x), (double)(dd110 * my_val.x));
-					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x0].y), (double)(dd110 * my_val.y));
-					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x1].x), (double)(dd111 * my_val.x));
-					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x1].y), (double)(dd111 * my_val.y));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x0].x), (DOUBLE)(dd110 * my_val.x));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x0].y), (DOUBLE)(dd110 * my_val.y));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x1].x), (DOUBLE)(dd111 * my_val.x));
+					atomicAdd(&(data_D[z1 * out_YXDIM + y1 * out_XDIM + x1].y), (DOUBLE)(dd111 * my_val.y));
 
-					atomicAdd(&(weight_D[z0 * out_YXDIM + y0 * out_XDIM + x0]), (double)(dd000 * my_weight));
-					atomicAdd(&(weight_D[z0 * out_YXDIM + y0 * out_XDIM + x1]), (double)(dd001 * my_weight));
+					atomicAdd(&(weight_D[z0 * out_YXDIM + y0 * out_XDIM + x0]), (DOUBLE)(dd000 * my_weight));
+					atomicAdd(&(weight_D[z0 * out_YXDIM + y0 * out_XDIM + x1]), (DOUBLE)(dd001 * my_weight));
 
-					atomicAdd(&(weight_D[z0 * out_YXDIM + y1 * out_XDIM + x0]), (double)(dd010 * my_weight));
-					atomicAdd(&(weight_D[z0 * out_YXDIM + y1 * out_XDIM + x1]), (double)(dd011 * my_weight));
+					atomicAdd(&(weight_D[z0 * out_YXDIM + y1 * out_XDIM + x0]), (DOUBLE)(dd010 * my_weight));
+					atomicAdd(&(weight_D[z0 * out_YXDIM + y1 * out_XDIM + x1]), (DOUBLE)(dd011 * my_weight));
 
-					atomicAdd(&(weight_D[z1 * out_YXDIM + y0 * out_XDIM + x0]), (double)(dd100 * my_weight));
-					atomicAdd(&(weight_D[z1 * out_YXDIM + y0 * out_XDIM + x1]), (double)(dd101 * my_weight));
+					atomicAdd(&(weight_D[z1 * out_YXDIM + y0 * out_XDIM + x0]), (DOUBLE)(dd100 * my_weight));
+					atomicAdd(&(weight_D[z1 * out_YXDIM + y0 * out_XDIM + x1]), (DOUBLE)(dd101 * my_weight));
 
-					atomicAdd(&(weight_D[z1 * out_YXDIM + y1 * out_XDIM + x0]), (double)(dd110 * my_weight));
-					atomicAdd(&(weight_D[z1 * out_YXDIM + y1 * out_XDIM + x1]), (double)(dd111 * my_weight));
+					atomicAdd(&(weight_D[z1 * out_YXDIM + y1 * out_XDIM + x0]), (DOUBLE)(dd110 * my_weight));
+					atomicAdd(&(weight_D[z1 * out_YXDIM + y1 * out_XDIM + x1]), (DOUBLE)(dd111 * my_weight));
 
 				} // endif TRILINEAR
 				else if (interpolator == 0)  //NEAREST_NEIGHBOUR 0
@@ -2374,16 +2378,16 @@ __global__ void  backproject_kernel(const cufftDoubleComplex* __restrict__ f2d_D
 
 					if (x0 < 0)
 					{
-						atomicAdd(&(data_D[-z0 * out_YXDIM - y0 * out_XDIM - x0].x), (double) my_val.x);
-						atomicAdd(&(data_D[-z0 * out_YXDIM - y0 * out_XDIM - x0].y), (double)(-my_val.y));
-						atomicAdd(&(weight_D[-z0 * out_YXDIM - y0 * out_XDIM - x0]), (double) my_weight);
+						atomicAdd(&(data_D[-z0 * out_YXDIM - y0 * out_XDIM - x0].x), (DOUBLE) my_val.x);
+						atomicAdd(&(data_D[-z0 * out_YXDIM - y0 * out_XDIM - x0].y), (DOUBLE)(-my_val.y));
+						atomicAdd(&(weight_D[-z0 * out_YXDIM - y0 * out_XDIM - x0]), (DOUBLE) my_weight);
 
 					}
 					else
 					{
-						atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].x), (double) my_val.x);
-						atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].y), (double) my_val.y);
-						atomicAdd(&(weight_D[z0 * out_YXDIM + y0 * out_XDIM + x0]), (double) my_weight);
+						atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].x), (DOUBLE) my_val.x);
+						atomicAdd(&(data_D[z0 * out_YXDIM + y0 * out_XDIM + x0].y), (DOUBLE) my_val.y);
+						atomicAdd(&(weight_D[z0 * out_YXDIM + y0 * out_XDIM + x0]), (DOUBLE) my_weight);
 
 					}
 
@@ -2392,13 +2396,13 @@ __global__ void  backproject_kernel(const cufftDoubleComplex* __restrict__ f2d_D
 		} // endif x-loop
 	}// endif y-loop
 }
-void backproject_gpu(cufftDoubleComplex* f2d_D,
-                     double* A_D,
+void backproject_gpu(CUFFT_COMPLEX * f2d_D,
+                     DOUBLE* A_D,
                      bool inv,
-                     double* Mweight_D,
-                     cufftDoubleComplex* data_D,
-                     double* weight_D,
-                     double padding_factor,
+                     DOUBLE* Mweight_D,
+                     CUFFT_COMPLEX * data_D,
+                     DOUBLE* weight_D,
+                     DOUBLE padding_factor,
                      int r_max,
                      int r_min_nn,
                      int ydim_f2d,
@@ -2465,8 +2469,8 @@ void backproject_gpu(cufftDoubleComplex* f2d_D,
 
 }
 
-__global__ void sign_Weight_kernel(const double* __restrict__ exp_Mweight_D,
-                                   const double* __restrict__ exp_Sum_Weigh_particles,
+__global__ void sign_Weight_kernel(const DOUBLE* __restrict__ exp_Mweight_D,
+                                   const DOUBLE* __restrict__ exp_Sum_Weigh_particles,
                                    const int* __restrict__  isSignificant_D,
                                    int* valid_weight_list_D,
                                    int exp_Mweight_xdim,
@@ -2484,7 +2488,7 @@ __global__ void sign_Weight_kernel(const double* __restrict__ exp_Mweight_D,
 		return ;
 	}
 
-	double local_weight;
+	DOUBLE local_weight;
 
 	int orients_index = (index_in_row) / (nr_oversampled_rot * nr_trans * nr_oversampled_trans);
 	if (isSignificant_D[orients_index] == 1)
@@ -2497,8 +2501,8 @@ __global__ void sign_Weight_kernel(const double* __restrict__ exp_Mweight_D,
 	}
 }
 
-void  sign_Weight_gpu(double* exp_Mweight_D,
-                      double* exp_Sum_Weigh_particles,
+void  sign_Weight_gpu(DOUBLE* exp_Mweight_D,
+                      DOUBLE* exp_Sum_Weigh_particles,
                       int* isSignificant_D,
                       int* valid_weight_list_D,
                       int exp_Mweight_xdim,
@@ -2524,8 +2528,8 @@ void  sign_Weight_gpu(double* exp_Mweight_D,
 
 }
 
-__global__ void compact_Weight_kernel(double* exp_Mweight_D,
-                                      double* exp_Sum_Weigh_particles,
+__global__ void compact_Weight_kernel(DOUBLE* exp_Mweight_D,
+                                      DOUBLE* exp_Sum_Weigh_particles,
                                       int* valid_weight_list_D,
                                       int* compact_position_list_D,
                                       int exp_Mweight_xdim,
@@ -2535,7 +2539,7 @@ __global__ void compact_Weight_kernel(double* exp_Mweight_D,
                                       int nr_trans,
                                       int nr_oversampled_trans,
                                       int iorientclass_offset,
-                                      double* valid_weight_D,
+                                      DOUBLE* valid_weight_D,
                                       int* weight_index,
                                       int* image_index_flag_D)
 {
@@ -2558,8 +2562,8 @@ __global__ void compact_Weight_kernel(double* exp_Mweight_D,
 	}
 }
 
-void compact_Weight_gpu(double* exp_Mweight_D,
-                        double* exp_Sum_Weigh_particles,
+void compact_Weight_gpu(DOUBLE* exp_Mweight_D,
+                        DOUBLE* exp_Sum_Weigh_particles,
                         int* valid_weight_list_D,
                         int* compact_position_list_D,
                         int exp_Mweight_xdim,
@@ -2569,7 +2573,7 @@ void compact_Weight_gpu(double* exp_Mweight_D,
                         int nr_trans,
                         int nr_oversampled_trans,
                         int iorientclass_offset,
-                        double* valid_weight_D,
+                        DOUBLE* valid_weight_D,
                         int* weight_index,
                         int* image_index_flag_D)
 {
@@ -2594,9 +2598,9 @@ void compact_Weight_gpu(double* exp_Mweight_D,
 	                                               image_index_flag_D);
 }
 
-__global__ void re_initial_exp_weight_kernel(double* exp_Mweight_D,
+__global__ void re_initial_exp_weight_kernel(DOUBLE* exp_Mweight_D,
                                              bool* exp_Mcoarse_significant_D,
-                                             double* mini_weight_particel_D,
+                                             DOUBLE* mini_weight_particel_D,
                                              int nr_images,
                                              int exp_Mweight_D_size,
                                              int exp_ipass)
@@ -2608,7 +2612,7 @@ __global__ void re_initial_exp_weight_kernel(double* exp_Mweight_D,
 	{
 		return ;
 	}
-	double mini_weight = mini_weight_particel_D[part_id];
+	DOUBLE mini_weight = mini_weight_particel_D[part_id];
 	if (exp_Mweight_D[index_in_row + part_id * exp_Mweight_D_size] != mini_weight)
 	{
 		exp_Mweight_D[index_in_row + part_id * exp_Mweight_D_size] = 0.;
@@ -2627,9 +2631,9 @@ __global__ void re_initial_exp_weight_kernel(double* exp_Mweight_D,
 	}
 
 }
-void re_initial_exp_weight_gpu(double* exp_Mweight_D,
+void re_initial_exp_weight_gpu(DOUBLE* exp_Mweight_D,
                                bool* exp_Mcoarse_significant_D,
-                               double* mini_weight_particel_D,
+                               DOUBLE* mini_weight_particel_D,
                                int nr_images,
                                int exp_Mweight_D_size,
                                int exp_ipass)
@@ -2647,16 +2651,16 @@ void re_initial_exp_weight_gpu(double* exp_Mweight_D,
 
 }
 
-__global__ void  calculate_minimal_weight_per_particle_kernel(const  double* __restrict__ exp_Mweight_D,
-                                                              double* Mini_weight,
-                                                              double init_value,
+__global__ void  calculate_minimal_weight_per_particle_kernel(const  DOUBLE* __restrict__ exp_Mweight_D,
+                                                              DOUBLE* Mini_weight,
+                                                              DOUBLE init_value,
                                                               int valid_size,
                                                               int exp_Mweight_D_size)
 {
-	__shared__ double local_weight[1024];
+	__shared__ DOUBLE local_weight[1024];
 
 	int tid = threadIdx.x;
-	double weight = 100000.;
+	DOUBLE weight = 99e99; 
 	int nr_loop;
 	if (tid < valid_size)
 	{
@@ -2696,9 +2700,9 @@ __global__ void  calculate_minimal_weight_per_particle_kernel(const  double* __r
 	}
 
 }
-void calculate_minimal_weight_per_particle_gpu(double* exp_Mweight_D,
-                                               double* Mini_weight,
-                                               double init_value,
+void calculate_minimal_weight_per_particle_gpu(DOUBLE* exp_Mweight_D,
+                                               DOUBLE* Mini_weight,
+                                               DOUBLE init_value,
                                                int valid_size,
                                                int nr_particles,
                                                int exp_Mweight_D_size)
@@ -2713,18 +2717,19 @@ void calculate_minimal_weight_per_particle_gpu(double* exp_Mweight_D,
 
 }
 
-__global__ void  calculate_sum_weight_per_particle_kernel(const  double* __restrict__ exp_Mweight_D,                                                       double* sum_weight,
+__global__ void  calculate_sum_weight_per_particle_kernel(const  DOUBLE* __restrict__ exp_Mweight_D,
+                                                          DOUBLE* sum_weight,
                                                           const  int* __restrict__ local_none_zero_number,
                                                           int* total_none_zero_number,
-                                                          const  double* __restrict__ max_weight_per_particle_D,
-                                                          double* max_weight_D,
+                                                          const  DOUBLE* __restrict__ max_weight_per_particle_D,
+                                                          DOUBLE* max_weight_D,
                                                           int valid_size,
                                                           int exp_Mweight_D_size)
 {
-	__shared__ double summer_weight[512];
+	__shared__ DOUBLE summer_weight[512];
 	__shared__ int sum_none_zero[512];
 	int tid = threadIdx.x;
-	double weight = 0.;
+	DOUBLE weight = 0.;
 	int count = 0;
 	int nr_loop;
 	if (tid < valid_size)
@@ -2765,12 +2770,12 @@ __global__ void  calculate_sum_weight_per_particle_kernel(const  double* __restr
 
 }
 
-void calculate_sum_weight_per_particle_gpu(double* exp_Mweight_D,
-                                           double* sum_weight,
+void calculate_sum_weight_per_particle_gpu(DOUBLE* exp_Mweight_D,
+                                           DOUBLE* sum_weight,
                                            int* local_none_zero_number,
                                            int* total_none_zero_number,
-                                           double* max_weight_per_particle_D,
-                                           double* max_weight_D,
+                                           DOUBLE* max_weight_per_particle_D,
+                                           DOUBLE* max_weight_D,
                                            int valid_size,
                                            int nr_particles,
                                            int exp_Mweight_D_size)
@@ -2788,9 +2793,9 @@ void calculate_sum_weight_per_particle_gpu(double* exp_Mweight_D,
 }
 
 
-__global__ void calculate_significant_sum_kernel(double* exp_Mweight_D,
-                                                 double* thresh_weight_D,
-                                                 double* exp_sum_weight_D,
+__global__ void calculate_significant_sum_kernel(DOUBLE* exp_Mweight_D,
+                                                 DOUBLE* thresh_weight_D,
+                                                 DOUBLE* exp_sum_weight_D,
                                                  int valid_size,
                                                  int exp_Mweight_D_size,
                                                  int down_factor
@@ -2800,7 +2805,7 @@ __global__ void calculate_significant_sum_kernel(double* exp_Mweight_D,
 	int ipart  = blockIdx.y;
 	int tid = threadIdx.x;
 	int index = bid_x * blockDim.x + tid;
-	__shared__ double local_sum_weight[BLOCK_SIZE];
+	__shared__ DOUBLE local_sum_weight[BLOCK_SIZE];
 	local_sum_weight[tid] = 0.;
 
 	if (index >= valid_size)
@@ -2808,7 +2813,7 @@ __global__ void calculate_significant_sum_kernel(double* exp_Mweight_D,
 		return;
 	}
 
-	double* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * exp_Mweight_D_size];
+	DOUBLE* thisthread_exp_Mweight_D = &exp_Mweight_D[ipart * exp_Mweight_D_size];
 
 	if (thisthread_exp_Mweight_D[index] < (thresh_weight_D[ipart] / down_factor))
 	{
@@ -2838,14 +2843,14 @@ __global__ void calculate_significant_sum_kernel(double* exp_Mweight_D,
 }
 
 
-__global__ void  calculate_sum_significant_weight_per_particle_kernel(double* exp_Mweight_D,
-                                                                      double* sum_weight,
+__global__ void  calculate_sum_significant_weight_per_particle_kernel(DOUBLE* exp_Mweight_D,
+                                                                      DOUBLE* sum_weight,
                                                                       int valid_size,
                                                                       int exp_Mweight_D_size)
 {
-	__shared__ double summer_weight[512];
+	__shared__ DOUBLE summer_weight[512];
 	int tid = threadIdx.x;
-	double weight = 0.;
+	DOUBLE weight = 0.;
 	int nr_loop;
 	if (tid < valid_size)
 	{
@@ -2879,9 +2884,9 @@ __global__ void  calculate_sum_significant_weight_per_particle_kernel(double* ex
 
 }
 
-void calculate_significant_partial_sum_gpu(double* exp_Mweight_D,
-                                           double* thresh_weight_D,
-                                           double* sum_weight,
+void calculate_significant_partial_sum_gpu(DOUBLE* exp_Mweight_D,
+                                           DOUBLE* thresh_weight_D,
+                                           DOUBLE* sum_weight,
                                            int valid_size,
                                            int nr_particles,
                                            int exp_Mweight_D_size,
@@ -2896,8 +2901,8 @@ void calculate_significant_partial_sum_gpu(double* exp_Mweight_D,
 	                                                           exp_Mweight_D_size, down_factor);
 
 }
-void calculate_sum_significant_weight_per_particle_gpu(double* exp_Mweight_D,
-                                                       double* sum_weight,
+void calculate_sum_significant_weight_per_particle_gpu(DOUBLE* exp_Mweight_D,
+                                                       DOUBLE* sum_weight,
                                                        int valid_size,
                                                        int nr_particles,
                                                        int exp_Mweight_D_size)
@@ -2909,12 +2914,12 @@ void calculate_sum_significant_weight_per_particle_gpu(double* exp_Mweight_D,
 	                                                                              valid_size,
 	                                                                              exp_Mweight_D_size);
 }
-extern __shared__ double  diff_array[ ];
+extern __shared__ DOUBLE  diff_array[ ];
 
-__global__ void calculate_diff2_no_do_squared_difference_pass0_kernel(double* diff2_D,
-                                                                      const cufftDoubleComplex* __restrict__ frefctf_D,
-                                                                      const cufftDoubleComplex* __restrict__ Fimg_shift_D,
-                                                                      const  double* __restrict__  exp_local_sqrtXi2_D,
+__global__ void calculate_diff2_no_do_squared_difference_pass0_kernel(DOUBLE* diff2_D,
+                                                                      const CUFFT_COMPLEX * __restrict__ frefctf_D,
+                                                                      const CUFFT_COMPLEX * __restrict__ Fimg_shift_D,
+                                                                      const  DOUBLE* __restrict__  exp_local_sqrtXi2_D,
                                                                       const  int* __restrict__  valid_orient_trans_index_D,
                                                                       int exp_nr_particles,
                                                                       int exp_nr_orients,
@@ -2931,19 +2936,19 @@ __global__ void calculate_diff2_no_do_squared_difference_pass0_kernel(double* di
 	int orient_id = (valid_orient_trans_index_D[bid_x]) / (exp_nr_trans);
 	int trans_id = (valid_orient_trans_index_D[bid_x] % exp_nr_trans);
 
-	__shared__ double diff2_array[BLOCK_SIZE], suma2_array[BLOCK_SIZE];
+	__shared__ DOUBLE diff2_array[BLOCK_SIZE], suma2_array[BLOCK_SIZE];
 	diff2_array[tid] = 0.;
 	suma2_array[tid] = 0.;
 
-	double suma2_real = 0., suma2_imag = 0.;
+	DOUBLE suma2_real = 0., suma2_imag = 0.;
 
 
 	int shift_id = part_id *  exp_nr_trans + trans_id;
 	int reordered_orient_id = bid_x / exp_nr_trans;//valid_orient_prefix_sum[orient_id];
 	int ref_image_offset = (part_id * nr_valid_orients + reordered_orient_id) * image_size;
 
-	const  cufftDoubleComplex* __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset]; //(part_id+(reordered_orient_id*exp_nr_oversampled_rot+oversampled_rot_id)*exp_nr_particles)
-	const  cufftDoubleComplex* __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];  //shift_id * image_size
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset]; //(part_id+(reordered_orient_id*exp_nr_oversampled_rot+oversampled_rot_id)*exp_nr_particles)
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];  //shift_id * image_size
 
 	for (int i = tid; i < image_size; i += BLOCK_SIZE)
 	{
@@ -2970,10 +2975,10 @@ __global__ void calculate_diff2_no_do_squared_difference_pass0_kernel(double* di
 		diff2_D[part_id * diff_xdim + orient_id * exp_nr_trans + trans_id] = - diff2_array[0] / (sqrt(suma2_array[0]) * exp_local_sqrtXi2_D[part_id]);
 	}
 }
-void calculate_diff2_no_do_squared_difference_pass0_gpu(double* diff2_D,
-                                                        cufftDoubleComplex* frefctf_D,
-                                                        cufftDoubleComplex* Fimg_shift_D,
-                                                        double* exp_local_sqrtXi2_D,
+void calculate_diff2_no_do_squared_difference_pass0_gpu(DOUBLE* diff2_D,
+                                                        CUFFT_COMPLEX * frefctf_D,
+                                                        CUFFT_COMPLEX * Fimg_shift_D,
+                                                        DOUBLE* exp_local_sqrtXi2_D,
                                                         int* valid_orient_trans_index_D,
                                                         int exp_nr_particles,
                                                         int exp_nr_orients,
@@ -3004,11 +3009,11 @@ void calculate_diff2_no_do_squared_difference_pass0_gpu(double* diff2_D,
 
 
 
-__global__ void calculate_diff2_do_squared_difference_pass0_kernel(double* diff2_D,
-                                                                   const  cufftDoubleComplex* __restrict__  frefctf_D,
-                                                                   const  cufftDoubleComplex* __restrict__  Fimg_shift_D,
-                                                                   const  double* __restrict__  exp_highres_Xi2_imgs_D,
-                                                                   const  double* __restrict__  Minvsigma2_D,
+__global__ void calculate_diff2_do_squared_difference_pass0_kernel(DOUBLE* diff2_D,
+                                                                   const  CUFFT_COMPLEX * __restrict__  frefctf_D,
+                                                                   const  CUFFT_COMPLEX * __restrict__  Fimg_shift_D,
+                                                                   const  DOUBLE* __restrict__  exp_highres_Xi2_imgs_D,
+                                                                   const  DOUBLE* __restrict__  Minvsigma2_D,
                                                                    const  int* __restrict__ valid_orient_trans_index_D,
                                                                    int exp_nr_particles,
                                                                    int exp_nr_orients,
@@ -3022,7 +3027,7 @@ __global__ void calculate_diff2_do_squared_difference_pass0_kernel(double* diff2
                                                                    int nr_trans_stride)
 
 {
-	double* diff2_array = (double*) &diff_array;
+	DOUBLE* diff2_array = (DOUBLE*) &diff_array;
 
 	int part_id = blockIdx.y;
 	int bid_x = blockIdx.x;
@@ -3031,13 +3036,13 @@ __global__ void calculate_diff2_do_squared_difference_pass0_kernel(double* diff2
 	int orient_id = (valid_orient_trans_index_D[bid_x * (exp_nr_trans * exp_nr_particles) + part_id * exp_nr_trans] % (exp_nr_orients * exp_nr_trans)) / (exp_nr_trans);
 	int ref_image_offset = (part_id * nr_valid_orients + bid_x) * image_size;
 
-	const  cufftDoubleComplex* __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset];
-	const  double* __restrict__ thisthread_Minvsigma2_D = &Minvsigma2_D[part_id * image_size];
-	double refctf_real, refctf_img , minvsigma2;
-	double Xi2_imgs = exp_highres_Xi2_imgs_D[part_id];
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_D = &frefctf_D[ref_image_offset];
+	const  DOUBLE* __restrict__ thisthread_Minvsigma2_D = &Minvsigma2_D[part_id * image_size];
+	DOUBLE refctf_real, refctf_img , minvsigma2;
+	DOUBLE Xi2_imgs = exp_highres_Xi2_imgs_D[part_id];
 	if (nr_trans_loop == 1)
 	{
-		double diff2_real = 0., diff2_imag = 0.;
+		DOUBLE diff2_real = 0., diff2_imag = 0.;
 		int exp_trans_offset = part_id * exp_nr_trans ;
 		for (int trans_id = 0; trans_id < exp_nr_trans; trans_id++)
 		{
@@ -3082,7 +3087,7 @@ __global__ void calculate_diff2_do_squared_difference_pass0_kernel(double* diff2
 		for (int j = 0; j < nr_trans_loop; j++)
 		{
 			int nr_trans = (j < (nr_trans_loop - 1)) ? nr_trans_stride : (exp_nr_trans - nr_trans_stride * j);
-			double diff2_real = 0., diff2_imag = 0.;
+			DOUBLE diff2_real = 0., diff2_imag = 0.;
 			int exp_trans_offset = part_id * exp_nr_trans + nr_trans_stride * j;
 			for (int trans_id = 0; trans_id < nr_trans; trans_id++)
 			{
@@ -3123,11 +3128,11 @@ __global__ void calculate_diff2_do_squared_difference_pass0_kernel(double* diff2
 
 }
 
-void calculate_diff2_do_squared_difference_pass0_gpu(double* diff2_D,
-                                                     cufftDoubleComplex* frefctf_D,
-                                                     cufftDoubleComplex* Fimg_shift_D,
-                                                     double* exp_highres_Xi2_imgs_D,
-                                                     double* Minvsigma2_D,
+void calculate_diff2_do_squared_difference_pass0_gpu(DOUBLE* diff2_D,
+                                                     CUFFT_COMPLEX * frefctf_D,
+                                                     CUFFT_COMPLEX * Fimg_shift_D,
+                                                     DOUBLE* exp_highres_Xi2_imgs_D,
+                                                     DOUBLE* Minvsigma2_D,
                                                      int* valid_orient_trans_index_D,
                                                      int exp_nr_particles,
                                                      int exp_nr_orients,
@@ -3144,11 +3149,11 @@ void calculate_diff2_do_squared_difference_pass0_gpu(double* diff2_D,
 	int nr_trans_stride = 4;
 	if (exp_nr_trans <= 4)
 	{
-		shared_size = sizeof(double) * (BLOCK_SIZE_128 * exp_nr_trans);
+		shared_size = sizeof(DOUBLE) * (BLOCK_SIZE_128 * exp_nr_trans);
 	}
 	else
 	{
-		shared_size = sizeof(double) * (BLOCK_SIZE_128 * nr_trans_stride);
+		shared_size = sizeof(DOUBLE) * (BLOCK_SIZE_128 * nr_trans_stride);
 	}
 	int nr_trans_loop = (exp_nr_trans <= 4) ? 1 : ((exp_nr_trans + (nr_trans_stride - 1)) / nr_trans_stride);
 	calculate_diff2_do_squared_difference_pass0_kernel <<< dimGrid, dimBlock, shared_size>>>(diff2_D,
@@ -3173,14 +3178,14 @@ void calculate_diff2_do_squared_difference_pass0_gpu(double* diff2_D,
 
 
 }
-__global__ void apply_ctf_and_calculate_all_diff2_squared_pass0_kernel(const  cufftDoubleComplex* __restrict__ fref_D,
-                                                                       const  double* __restrict__ mctf_D,
-                                                                       const  double* __restrict__ myscale_D,
-                                                                       double* diff2_D,
-                                                                       //const  cufftDoubleComplex * __restrict__  frefctf_D,
-                                                                       const  cufftDoubleComplex* __restrict__  Fimg_shift_D,
-                                                                       const  double* __restrict__  exp_highres_Xi2_imgs_D,
-                                                                       const  double* __restrict__  Minvsigma2_D,
+__global__ void apply_ctf_and_calculate_all_diff2_squared_pass0_kernel(const  CUFFT_COMPLEX * __restrict__ fref_D,
+                                                                       const  DOUBLE* __restrict__ mctf_D,
+                                                                       const  DOUBLE* __restrict__ myscale_D,
+                                                                       DOUBLE* diff2_D,
+                                                                       //const  CUFFT_COMPLEX  * __restrict__  frefctf_D,
+                                                                       const  CUFFT_COMPLEX * __restrict__  Fimg_shift_D,
+                                                                       const  DOUBLE* __restrict__  exp_highres_Xi2_imgs_D,
+                                                                       const  DOUBLE* __restrict__  Minvsigma2_D,
                                                                        const  int* __restrict__ valid_orient_trans_index_D,
                                                                        int exp_nr_particles,
                                                                        int exp_nr_orients,
@@ -3193,7 +3198,7 @@ __global__ void apply_ctf_and_calculate_all_diff2_squared_pass0_kernel(const  cu
                                                                        bool do_ctf_correction_and_refs_are_ctf_corrected,
                                                                        bool do_scale_correction)
 {
-	double* diff2_array = (double*) &diff_array;
+	DOUBLE* diff2_array = (DOUBLE*) &diff_array;
 
 	int part_id = blockIdx.y;
 	int tid = threadIdx.x;
@@ -3203,8 +3208,8 @@ __global__ void apply_ctf_and_calculate_all_diff2_squared_pass0_kernel(const  cu
 	int offset_image = part_id * image_size ;
 	int offset_orientation = blockIdx.x * image_size;
 
-	double refctf_real, refctf_img , minvsigma2;
-	double diff2_real , diff2_imag;
+	DOUBLE refctf_real, refctf_img , minvsigma2;
+	DOUBLE diff2_real , diff2_imag;
 
 	for (int trans_id = 0; trans_id < exp_nr_trans; trans_id++)
 	{
@@ -3258,13 +3263,13 @@ __global__ void apply_ctf_and_calculate_all_diff2_squared_pass0_kernel(const  cu
 	}
 
 }
-void apply_ctf_and_calculate_all_diff2_squared_pass0_gpu(cufftDoubleComplex* fref_D,
-                                                         double* exp_local_Fctfs_D,
-                                                         double* myscale_D,
-                                                         double* diff2_D,
-                                                         cufftDoubleComplex* Fimg_shift_D,
-                                                         double* exp_highres_Xi2_imgs_D,
-                                                         double* Minvsigma2_D,
+void apply_ctf_and_calculate_all_diff2_squared_pass0_gpu(CUFFT_COMPLEX * fref_D,
+                                                         DOUBLE* exp_local_Fctfs_D,
+                                                         DOUBLE* myscale_D,
+                                                         DOUBLE* diff2_D,
+                                                         CUFFT_COMPLEX * Fimg_shift_D,
+                                                         DOUBLE* exp_highres_Xi2_imgs_D,
+                                                         DOUBLE* Minvsigma2_D,
                                                          int* valid_orient_trans_index_D,
                                                          int exp_nr_particles,
                                                          int exp_nr_orients,
@@ -3279,7 +3284,7 @@ void apply_ctf_and_calculate_all_diff2_squared_pass0_gpu(cufftDoubleComplex* fre
 {
 	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
 	dim3 dimGrid(nr_valid_orients, exp_nr_particles, 1);
-	int shared_size = sizeof(double) * (BLOCK_SIZE_128 * exp_nr_trans);
+	int shared_size = sizeof(DOUBLE) * (BLOCK_SIZE_128 * exp_nr_trans);
 	apply_ctf_and_calculate_all_diff2_squared_pass0_kernel <<< dimGrid, dimBlock, shared_size>>>
 	(fref_D,
 	 exp_local_Fctfs_D,
@@ -3302,9 +3307,9 @@ void apply_ctf_and_calculate_all_diff2_squared_pass0_gpu(cufftDoubleComplex* fre
 
 }
 
-__global__ void calculate_img_power_kernel(const  cufftDoubleComplex* __restrict__ local_Faux_D,
-                                           double* exp_power_imgs_D,
-                                           double* exp_highres_Xi2_imgs_D,
+__global__ void calculate_img_power_kernel(const  CUFFT_COMPLEX * __restrict__ local_Faux_D,
+                                           DOUBLE* exp_power_imgs_D,
+                                           DOUBLE* exp_highres_Xi2_imgs_D,
                                            int im_x,
                                            int im_y,
                                            int im_z,
@@ -3318,7 +3323,7 @@ __global__ void calculate_img_power_kernel(const  cufftDoubleComplex* __restrict
 	int pixel_id = tid + blockIdx.x * blockDim.x;
 	int im_id = blockIdx.y;
 
-	__shared__ double normFaux_local[BLOCK_SIZE_128];
+	__shared__ DOUBLE normFaux_local[BLOCK_SIZE_128];
 	normFaux_local[tid] = 0.;
 	if (pixel_id >= im_size)
 	{
@@ -3332,13 +3337,13 @@ __global__ void calculate_img_power_kernel(const  cufftDoubleComplex* __restrict
 	ip  = (ip < im_x) ? (ip) : (ip - im_y);
 	kp = (kp < im_x) ? (kp) : (kp - im_z);
 
-	double ires = sqrt((double)(kp * kp + ip * ip + jp * jp));
+	DOUBLE ires = sqrt((DOUBLE)(kp * kp + ip * ip + jp * jp));
 	int ires_id = (((ires) > 0) ? (int)((ires) + 0.5) : (int)((ires) - 0.5));
 
 
 	if (ires_id > 0 && ires_id < half_mymodel_ori_size && !(jp == 0 && ip < 0))
 	{
-		double normFaux  = (local_Faux_D[pixel_id + im_id * im_size].x * local_Faux_D[pixel_id + im_id * im_size].x)
+		DOUBLE normFaux  = (local_Faux_D[pixel_id + im_id * im_size].x * local_Faux_D[pixel_id + im_id * im_size].x)
 		                   + (local_Faux_D[pixel_id + im_id * im_size].y * local_Faux_D[pixel_id + im_id * im_size].y);
 		atomicAdd(&(exp_power_imgs_D[im_id * half_mymodel_ori_size + ires_id]),  normFaux);
 		if (ires_id >= half_mymodel_current_size)
@@ -3364,9 +3369,9 @@ __global__ void calculate_img_power_kernel(const  cufftDoubleComplex* __restrict
 	}
 }
 
-void calculate_img_power_gpu(cufftDoubleComplex* local_Faux_D,
-                             double* exp_power_imgs_D,
-                             double* exp_highres_Xi2_imgs_D,
+void calculate_img_power_gpu(CUFFT_COMPLEX * local_Faux_D,
+                             DOUBLE* exp_power_imgs_D,
+                             DOUBLE* exp_highres_Xi2_imgs_D,
                              int nr_images,
                              int Faux_x,
                              int Faux_y,
@@ -3395,19 +3400,19 @@ void calculate_img_power_gpu(cufftDoubleComplex* local_Faux_D,
 	}
 	else
 	{
-		cudaMemset(exp_highres_Xi2_imgs_D, 0., sizeof(double) *nr_images);
+		cudaMemset(exp_highres_Xi2_imgs_D, 0., sizeof(DOUBLE) *nr_images);
 	}
 
 }
 
-__device__ double getCTF_kernel(int im, double X, double Y,
+__device__ DOUBLE getCTF_kernel(int im, DOUBLE X, DOUBLE Y,
                                 bool do_abs = false, bool do_only_flip_phases = false, bool do_intact_until_first_peak = false, bool do_damping = true)
 
 {
-	double u2 = X * X + Y * Y;
-	double u = sqrt(u2);
-	double u4 = u2 * u2;
-	double deltaf;
+	DOUBLE u2 = X * X + Y * Y;
+	DOUBLE u = sqrt(u2);
+	DOUBLE u4 = u2 * u2;
+	DOUBLE deltaf;
 	if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
 	        ABS(Y) < XMIPP_EQUAL_ACCURACY)
 	{
@@ -3415,12 +3420,12 @@ __device__ double getCTF_kernel(int im, double X, double Y,
 	}
 	else
 	{
-		double ellipsoid_ang = atan2(Y, X) -  ctf_related_parameters_D[im * 9 + 2];
-		double cos_ellipsoid_ang_2 = cos(2 * ellipsoid_ang);
+		DOUBLE ellipsoid_ang = atan2(Y, X) -  ctf_related_parameters_D[im * 9 + 2];
+		DOUBLE cos_ellipsoid_ang_2 = cos(2 * ellipsoid_ang);
 		deltaf = (ctf_related_parameters_D[im * 9] +  ctf_related_parameters_D[im * 9 + 1] * cos_ellipsoid_ang_2);
 	}
-	double argument = ctf_related_parameters_D[im * 9 + 5] * deltaf * u2 + ctf_related_parameters_D[im * 9 + 6]  * u4;
-	double retval;
+	DOUBLE argument = ctf_related_parameters_D[im * 9 + 5] * deltaf * u2 + ctf_related_parameters_D[im * 9 + 6]  * u4;
+	DOUBLE retval;
 	if (do_intact_until_first_peak && ABS(argument) < PI / 2.)
 	{
 		retval = 1.;
@@ -3431,7 +3436,7 @@ __device__ double getCTF_kernel(int im, double X, double Y,
 	}
 	if (do_damping)
 	{
-		double E = exp(ctf_related_parameters_D[im * 9 + 8]  * u2); // B-factor decay (K4 = -Bfac/4);
+		DOUBLE E = exp(ctf_related_parameters_D[im * 9 + 8]  * u2); // B-factor decay (K4 = -Bfac/4);
 		retval *= E;
 	}
 	if (do_abs)
@@ -3445,8 +3450,8 @@ __device__ double getCTF_kernel(int im, double X, double Y,
 	return ctf_related_parameters_D[im * 9 + 4]  * retval;
 }
 
-__global__ void getFftwImage_kernel(double* local_Fctf_images_D,
-                                    double orixdim_angpix, double oriydim_angpix,
+__global__ void getFftwImage_kernel(DOUBLE* local_Fctf_images_D,
+                                    DOUBLE orixdim_angpix, DOUBLE oriydim_angpix,
                                     bool do_abs, bool do_only_flip_phases, bool do_intact_until_first_peak,
                                     bool do_damping,
                                     int nr_images,
@@ -3468,8 +3473,8 @@ __global__ void getFftwImage_kernel(double* local_Fctf_images_D,
 		int ip = (pixel_id / xdim);
 
 		ip  = (ip < xdim) ? (ip) : (ip - ydim);
-		double x = (double)jp / orixdim_angpix;
-		double y = (double)ip / oriydim_angpix;
+		DOUBLE x = (DOUBLE)jp / orixdim_angpix;
+		DOUBLE y = (DOUBLE)ip / oriydim_angpix;
 		local_Fctf_images_D[im_id * xdim * ydim + pixel_id] = getCTF_kernel(im_id, x, y, do_abs, do_only_flip_phases, do_intact_until_first_peak, do_damping);
 	}
 	else
@@ -3479,9 +3484,9 @@ __global__ void getFftwImage_kernel(double* local_Fctf_images_D,
 
 }
 
-void getFftwImage_gpu(double* local_Fctf_images_D,
-                      double* ctf_related_parameters_H,
-                      int orixdim, int oriydim, double angpix,
+void getFftwImage_gpu(DOUBLE* local_Fctf_images_D,
+                      DOUBLE* ctf_related_parameters_H,
+                      int orixdim, int oriydim, DOUBLE angpix,
                       bool do_abs, bool do_only_flip_phases, bool do_intact_until_first_peak,
                       bool do_damping,
                       int nr_images,
@@ -3489,13 +3494,13 @@ void getFftwImage_gpu(double* local_Fctf_images_D,
                       int ydim,
                       bool do_ctf_correction)
 {
-	double orixdim_angpix = (double) orixdim * angpix;
-	double oriydim_angpix = (double) oriydim * angpix;
+	DOUBLE orixdim_angpix = (DOUBLE) orixdim * angpix;
+	DOUBLE oriydim_angpix = (DOUBLE) oriydim * angpix;
 	int image_size = xdim * ydim;
 	int blk_x = (image_size + BLOCK_SIZE_128 - 1) / BLOCK_SIZE_128;
 	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
 	dim3 dimGrid(blk_x, nr_images, 1);
-	cudaMemcpyToSymbol(ctf_related_parameters_D, ctf_related_parameters_H, nr_images * 9 * sizeof(double), 0 , cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(ctf_related_parameters_D, ctf_related_parameters_H, nr_images * 9 * sizeof(DOUBLE), 0 , cudaMemcpyHostToDevice);
 	getFftwImage_kernel <<< dimGrid, dimBlock>>>(local_Fctf_images_D,
 	                                             orixdim_angpix,
 	                                             oriydim_angpix,
@@ -3511,7 +3516,7 @@ void getFftwImage_gpu(double* local_Fctf_images_D,
 
 
 }
-__global__ void ScaleComplexPointwise_kernel(cufftDoubleComplex* a, int size, double scale)
+__global__ void ScaleComplexPointwise_kernel(CUFFT_COMPLEX * a, int size, DOUBLE scale)
 {
 	int global_index = blockIdx.x * blockDim.x + threadIdx.x;
 	if (global_index >= size)
@@ -3522,9 +3527,444 @@ __global__ void ScaleComplexPointwise_kernel(cufftDoubleComplex* a, int size, do
 	a[global_index].y *= scale;
 }
 
-void ScaleComplexPointwise_gpu(cufftDoubleComplex* fFourier_D, int size, double scale)
+void ScaleComplexPointwise_gpu(CUFFT_COMPLEX * fFourier_D, int size, DOUBLE scale)
 {
 	dim3 blockDim(BLOCK_SIZE_128, 1, 1);
 	dim3 dimGrid((size + BLOCK_SIZE_128 - 1) / BLOCK_SIZE_128, 1, 1);
 	ScaleComplexPointwise_kernel <<< dimGrid, blockDim>>>(fFourier_D, size,  scale);
 }
+
+
+
+__global__ void calculate_diff2_no_do_squared_difference_mask_kernel(DOUBLE* diff2_D,
+                                                                CUFFT_COMPLEX * frefctf_yellow_D, CUFFT_COMPLEX * frefctf_red_D,
+                                                                CUFFT_COMPLEX * Fimg_shift_D,
+                                                                DOUBLE* exp_local_sqrtXi2_D,
+                                                                int* valid_orient_trans_index_D,
+                                                                int* valid_orient_prefix_sum,
+                                                                int exp_nr_particles,
+                                                                int exp_nr_orients,
+                                                                int exp_nr_trans,
+                                                                int exp_nr_oversampled_rot,
+                                                                int exp_nr_oversampled_trans,
+                                                                int nr_valid_orients,
+                                                                int diff_xdim,
+                                                                int image_size)
+{
+	int bid_x = blockIdx.x;
+	int part_id = valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] / (exp_nr_orients * exp_nr_trans);
+	int tid = threadIdx.x;
+	int orient_id = (valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] % (exp_nr_orients * exp_nr_trans)) / (exp_nr_trans);
+	int trans_id = (valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] % exp_nr_trans);
+
+	__shared__ DOUBLE diff2_array[BLOCK_SIZE], suma2_array[BLOCK_SIZE];
+	diff2_array[tid] = 0.;
+	suma2_array[tid] = 0.;
+
+	DOUBLE suma2_real = 0., suma2_imag = 0.;
+
+	int oversampled_rot_id =  bid_x % (exp_nr_oversampled_rot * exp_nr_oversampled_trans) / exp_nr_oversampled_trans;
+	int oversampled_trans_id =  bid_x % exp_nr_oversampled_trans;
+	int shift_id = part_id * exp_nr_oversampled_trans * exp_nr_trans +
+	               trans_id * exp_nr_oversampled_trans + oversampled_trans_id;
+	int reordered_orient_id = valid_orient_prefix_sum[orient_id];
+	int ref_image_offset = (part_id * nr_valid_orients * exp_nr_oversampled_rot + reordered_orient_id * exp_nr_oversampled_rot + oversampled_rot_id) * image_size;
+
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_yellow_D = &frefctf_yellow_D[ref_image_offset]; //(part_id+(reordered_orient_id*exp_nr_oversampled_rot+oversampled_rot_id)*exp_nr_particles)
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_red_D = &frefctf_red_D[ref_image_offset]; //(part_id+(reordered_orient_id*exp_nr_oversampled_rot+oversampled_rot_id)*exp_nr_particles)
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];  //shift_id * image_size
+
+
+	for (int i = tid; i < image_size; i += BLOCK_SIZE)
+	{
+
+		diff2_array[tid] += thisthread_Frefctf_red_D[i].x * (thisthread_Fimg_shift_D[i].x - thisthread_Frefctf_yellow_D[i].x) 
+			+ thisthread_Frefctf_red_D[i].y * (thisthread_Fimg_shift_D[i].y - thisthread_Frefctf_yellow_D[i].y);
+
+		suma2_real = thisthread_Frefctf_red_D[i].x;
+		suma2_imag = thisthread_Frefctf_red_D[i].y;
+		suma2_array[tid] += suma2_real * suma2_real + suma2_imag * suma2_imag;
+	}
+	__syncthreads();
+	for (int s = BLOCK_SIZE >> 1; s > 0; s >>= 1)
+	{
+		if (tid < s)
+		{
+			diff2_array[tid] += diff2_array[tid + s];
+			suma2_array[tid] += suma2_array[tid + s];
+		}
+		__syncthreads();
+	}
+	__syncthreads();
+
+	if (tid == 0)
+	{
+		diff2_D[part_id * diff_xdim + ((orient_id * exp_nr_trans + trans_id)* exp_nr_oversampled_rot + oversampled_rot_id)*  exp_nr_oversampled_trans + oversampled_trans_id] = - diff2_array[0] / (sqrt(suma2_array[0]) * exp_local_sqrtXi2_D[part_id]);
+	}
+}
+
+void calculate_diff2_no_do_squared_difference_mask_gpu(DOUBLE* diff2_D,
+                                                  CUFFT_COMPLEX * frefctf_yellow_D, CUFFT_COMPLEX *frefctf_red_D,
+                                                  CUFFT_COMPLEX * Fimg_shift_D,
+                                                  DOUBLE* exp_local_sqrtXi2_D,
+                                                  int* valid_orient_trans_index_D,
+                                                  int* valid_orient_prefix_sum,
+                                                  int exp_nr_particles,
+                                                  int exp_nr_orients,
+                                                  int exp_nr_trans,
+                                                  int exp_nr_oversampled_rot,
+                                                  int exp_nr_oversampled_trans,
+                                                  int nr_valid_orients,
+                                                  int diff_xdim,
+                                                  int image_size,
+                                                  int nr_valid_orient_trans)
+{
+	dim3 dimBlock(BLOCK_SIZE, 1, 1);
+	dim3 dimGrid(exp_nr_oversampled_rot * exp_nr_oversampled_trans * nr_valid_orient_trans, 1, 1);
+
+	calculate_diff2_no_do_squared_difference_mask_kernel <<< dimGrid, dimBlock>>>(diff2_D,
+	                                                                         frefctf_yellow_D, frefctf_red_D,
+	                                                                         Fimg_shift_D,
+	                                                                         exp_local_sqrtXi2_D,
+	                                                                         valid_orient_trans_index_D,
+	                                                                         valid_orient_prefix_sum,
+	                                                                         exp_nr_particles,
+	                                                                         exp_nr_orients,
+	                                                                         exp_nr_trans,
+	                                                                         exp_nr_oversampled_rot,
+	                                                                         exp_nr_oversampled_trans,
+	                                                                         nr_valid_orients,
+	                                                                         diff_xdim,
+	                                                                         image_size);
+}
+
+
+
+__global__ void calculate_diff2_do_squared_difference_mask_kernel(DOUBLE* diff2_D,
+                                                             const  CUFFT_COMPLEX * __restrict__  frefctf_yellow_D, 
+                                                             const  CUFFT_COMPLEX * __restrict__  frefctf_red_D,
+                                                             const  CUFFT_COMPLEX * __restrict__  Fimg_shift_D,
+                                                             DOUBLE* exp_highres_Xi2_imgs_D,
+                                                             DOUBLE* Minvsigma2_D,
+                                                             int* valid_orient_trans_index_D,
+                                                             int* valid_orient_prefix_sum,
+                                                             int exp_nr_particles,
+                                                             int exp_nr_orients,
+                                                             int exp_nr_trans,
+                                                             int exp_nr_oversampled_rot,
+                                                             int exp_nr_oversampled_trans,
+                                                             int nr_valid_orients,
+                                                             int diff_xdim,
+                                                             int image_size)
+{
+
+	int bid_x = blockIdx.x;
+	int part_id = valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] / (exp_nr_orients * exp_nr_trans);
+	int tid = threadIdx.x;
+	int orient_id = (valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] % (exp_nr_orients * exp_nr_trans)) / (exp_nr_trans);
+	int trans_id = (valid_orient_trans_index_D[bid_x / (exp_nr_oversampled_rot * exp_nr_oversampled_trans)] % exp_nr_trans);
+
+	int oversampled_rot_id =  bid_x % (exp_nr_oversampled_rot * exp_nr_oversampled_trans) / exp_nr_oversampled_trans;
+	int oversampled_trans_id =  bid_x % exp_nr_oversampled_trans;
+	int shift_id = part_id * exp_nr_oversampled_trans * exp_nr_trans + trans_id * exp_nr_oversampled_trans + oversampled_trans_id;
+
+	int reordered_orient_id = valid_orient_prefix_sum[orient_id];
+	int ref_image_offset = (part_id * nr_valid_orients * exp_nr_oversampled_rot + reordered_orient_id * exp_nr_oversampled_rot + oversampled_rot_id) * image_size;
+
+	__shared__ DOUBLE diff2_array[BLOCK_SIZE_128];
+	diff2_array[tid] = 0.;
+
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_yellow_D = &frefctf_yellow_D[ref_image_offset];
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_red_D = &frefctf_red_D[ref_image_offset];
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Fimg_shift_D = &Fimg_shift_D[shift_id * image_size];
+
+	DOUBLE* thisthread_Minvsigma2_D = &Minvsigma2_D[part_id * image_size];
+
+	DOUBLE diff2_real = 0., diff2_imag = 0.;
+	for (int i = tid; i < image_size; i += blockDim.x)
+	{
+		diff2_real = thisthread_Frefctf_yellow_D[i].x + thisthread_Frefctf_red_D[i].x - thisthread_Fimg_shift_D[i].x;
+		diff2_imag = thisthread_Frefctf_yellow_D[i].y + thisthread_Frefctf_red_D[i].y - thisthread_Fimg_shift_D[i].y;
+		diff2_array[tid] += (diff2_real * diff2_real + diff2_imag * diff2_imag) * 0.5 * thisthread_Minvsigma2_D[i];
+	}
+
+	__syncthreads();
+	for (int s = BLOCK_SIZE_128 >> 1; s > 0; s >>= 1)
+	{
+		if (tid < s)
+		{
+			diff2_array[tid] += diff2_array[tid + s];
+		}
+		__syncthreads();
+	}
+
+	if (tid == 0)
+	{
+		diff2_D[part_id * diff_xdim + ((orient_id * exp_nr_trans + trans_id)* exp_nr_oversampled_rot + oversampled_rot_id)*  exp_nr_oversampled_trans + oversampled_trans_id] = diff2_array[0] + exp_highres_Xi2_imgs_D[part_id] * 0.5;
+	}
+}
+
+
+void calculate_diff2_do_squared_difference_mask_gpu(DOUBLE* diff2_D,
+                                               CUFFT_COMPLEX * frefctf_yellow_D, 
+                                               CUFFT_COMPLEX * frefctf_red_D,
+                                               CUFFT_COMPLEX * Fimg_shift_D,
+                                               DOUBLE* exp_highres_Xi2_imgs_D,
+                                               DOUBLE* Minvsigma2_D,
+                                               int* valid_orient_trans_index_D,
+                                               int* valid_orient_prefix_sum,
+                                               int exp_nr_particles,
+                                               int exp_nr_orients,
+                                               int exp_nr_trans,
+                                               int exp_nr_oversampled_rot,
+                                               int exp_nr_oversampled_trans,
+                                               int nr_valid_orients,
+                                               int diff_xdim,
+                                               int image_size,
+                                               int  nr_valid_orient_trans)
+{
+	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
+	dim3 dimGrid(exp_nr_oversampled_rot * exp_nr_oversampled_trans * nr_valid_orient_trans, 1, 1);
+	calculate_diff2_do_squared_difference_mask_kernel <<< dimGrid, dimBlock>>>(diff2_D,
+	                                                                      frefctf_yellow_D,
+	                                                                      frefctf_red_D,
+	                                                                      Fimg_shift_D,
+	                                                                      exp_highres_Xi2_imgs_D,
+	                                                                      Minvsigma2_D,
+	                                                                      valid_orient_trans_index_D,
+	                                                                      valid_orient_prefix_sum,
+	                                                                      exp_nr_particles,
+	                                                                      exp_nr_orients,
+	                                                                      exp_nr_trans,
+	                                                                      exp_nr_oversampled_rot,
+	                                                                      exp_nr_oversampled_trans,
+	                                                                      nr_valid_orients,
+	                                                                      diff_xdim,
+	                                                                      image_size);
+}
+
+
+
+__global__ void calculate_diff2_do_squared_difference_pass0_mask_kernel(DOUBLE* diff2_D,
+                                                                   const  CUFFT_COMPLEX * __restrict__  frefctf_yellow_D,
+                                                                   const  CUFFT_COMPLEX * __restrict__  frefctf_red_D,
+                                                                   const  CUFFT_COMPLEX * __restrict__  Fimg_shift_D,
+                                                                   const  DOUBLE* __restrict__  exp_highres_Xi2_imgs_D,
+                                                                   const  DOUBLE* __restrict__  Minvsigma2_D,
+                                                                   const  int* __restrict__ valid_orient_trans_index_D,
+                                                                   int exp_nr_particles,
+                                                                   int exp_nr_orients,
+                                                                   int exp_nr_trans,
+                                                                   int exp_nr_oversampled_rot,
+                                                                   int exp_nr_oversampled_trans,
+                                                                   int nr_valid_orients,
+                                                                   int diff_xdim,
+                                                                   int image_size,
+                                                                   int nr_trans_loop,
+                                                                   int nr_trans_stride)
+
+{
+	DOUBLE* diff2_array = (DOUBLE*) &diff_array;
+
+	int part_id = blockIdx.y;
+	int bid_x = blockIdx.x;
+	int tid = threadIdx.x;
+
+	int orient_id = (valid_orient_trans_index_D[bid_x * (exp_nr_trans * exp_nr_particles) + part_id * exp_nr_trans] % (exp_nr_orients * exp_nr_trans)) / (exp_nr_trans);
+	int ref_image_offset = (part_id * nr_valid_orients + bid_x) * image_size;
+
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_yellow_D = &frefctf_yellow_D[ref_image_offset];
+	const  CUFFT_COMPLEX * __restrict__ thisthread_Frefctf_red_D = &frefctf_red_D[ref_image_offset];
+	const  DOUBLE* __restrict__ thisthread_Minvsigma2_D = &Minvsigma2_D[part_id * image_size];
+	DOUBLE refctf_yellow_real, refctf_yellow_img , minvsigma2;
+	DOUBLE refctf_red_real, refctf_red_img;
+	DOUBLE Xi2_imgs = exp_highres_Xi2_imgs_D[part_id];
+	if (nr_trans_loop == 1)
+	{
+		DOUBLE diff2_real = 0., diff2_imag = 0.;
+		int exp_trans_offset = part_id * exp_nr_trans ;
+		for (int trans_id = 0; trans_id < exp_nr_trans; trans_id++)
+		{
+			diff2_array[tid + trans_id * blockDim.x ] = 0.;
+		}
+
+		for (int i = tid; i < image_size; i += blockDim.x)
+		{
+			refctf_yellow_real = thisthread_Frefctf_yellow_D[i].x;
+			refctf_yellow_img = thisthread_Frefctf_yellow_D[i].y;
+			refctf_red_real = thisthread_Frefctf_red_D[i].x;
+			refctf_red_img = thisthread_Frefctf_red_D[i].y;
+			minvsigma2 = thisthread_Minvsigma2_D[i];
+#pragma unroll
+			for (int trans_id = 0; trans_id < exp_nr_trans; trans_id++)
+			{
+				diff2_real = refctf_yellow_real + refctf_red_real - Fimg_shift_D[(exp_trans_offset + trans_id) * image_size + i].x;
+				diff2_imag = refctf_yellow_img + refctf_red_img - Fimg_shift_D[(exp_trans_offset + trans_id) * image_size + i].y;
+				diff2_array[tid + trans_id * blockDim.x ] += (diff2_real * diff2_real + diff2_imag * diff2_imag) * 0.5 * minvsigma2;
+			}
+		}
+		__syncthreads();
+
+		for (int s = blockDim.x >> 1; s > 0; s >>= 1)
+		{
+			if (tid < s)
+			{
+#pragma unroll
+				for (int trans_id = 0; trans_id < exp_nr_trans; trans_id++)
+				{
+					diff2_array[tid + trans_id * blockDim.x] += diff2_array[tid + trans_id * blockDim.x + s];
+				}
+			}
+			__syncthreads();
+		}
+
+		if (tid < exp_nr_trans)
+		{
+			diff2_D[part_id * diff_xdim + orient_id * exp_nr_trans + tid] = diff2_array[tid * blockDim.x] + Xi2_imgs * 0.5;
+		}
+	}
+	else
+	{
+		for (int j = 0; j < nr_trans_loop; j++)
+		{
+			int nr_trans = (j < (nr_trans_loop - 1)) ? nr_trans_stride : (exp_nr_trans - nr_trans_stride * j);
+			DOUBLE diff2_real = 0., diff2_imag = 0.;
+			int exp_trans_offset = part_id * exp_nr_trans + nr_trans_stride * j;
+			for (int trans_id = 0; trans_id < nr_trans; trans_id++)
+			{
+				diff2_array[tid + trans_id * blockDim.x ] = 0.;
+			}
+			for (int i = tid; i < image_size; i += blockDim.x)
+			{
+			refctf_yellow_real = thisthread_Frefctf_yellow_D[i].x;
+			refctf_yellow_img = thisthread_Frefctf_yellow_D[i].y;
+			refctf_red_real = thisthread_Frefctf_red_D[i].x;
+			refctf_red_img = thisthread_Frefctf_red_D[i].y;
+				minvsigma2 = thisthread_Minvsigma2_D[i];
+#pragma unroll
+				for (int trans_id = 0; trans_id < nr_trans; trans_id++)
+				{
+					diff2_real = refctf_yellow_real + refctf_red_real - Fimg_shift_D[(exp_trans_offset + trans_id) * image_size + i].x;
+					diff2_imag = refctf_yellow_img + refctf_red_img - Fimg_shift_D[(exp_trans_offset + trans_id) * image_size + i].y;
+					diff2_array[tid + trans_id * blockDim.x ] += (diff2_real * diff2_real + diff2_imag * diff2_imag) * 0.5 * minvsigma2;
+				}
+			}
+			__syncthreads();
+
+			for (int s = blockDim.x >> 1; s > 0; s >>= 1)
+			{
+				if (tid < s)
+				{
+					for (int trans_id = 0; trans_id < nr_trans; trans_id++)
+					{
+						diff2_array[tid + trans_id * blockDim.x] += diff2_array[tid + trans_id * blockDim.x + s];
+					}
+				}
+				__syncthreads();
+			}
+			if (tid < nr_trans)
+			{
+				diff2_D[part_id * diff_xdim + orient_id * exp_nr_trans + tid + nr_trans_stride * j] = diff2_array[tid * blockDim.x] + Xi2_imgs * 0.5;
+			}
+		}
+	}
+
+}
+
+void calculate_diff2_do_squared_difference_pass0_mask_gpu(DOUBLE* diff2_D,
+                                                     CUFFT_COMPLEX * frefctf_yellow_D, CUFFT_COMPLEX *frefctf_red_D,
+                                                     CUFFT_COMPLEX * Fimg_shift_D,
+                                                     DOUBLE* exp_highres_Xi2_imgs_D,
+                                                     DOUBLE* Minvsigma2_D,
+                                                     int* valid_orient_trans_index_D,
+                                                     int exp_nr_particles,
+                                                     int exp_nr_orients,
+                                                     int exp_nr_trans,
+                                                     int exp_nr_oversampled_rot,
+                                                     int exp_nr_oversampled_trans,
+                                                     int nr_valid_orients,
+                                                     int diff_xdim,
+                                                     int image_size)
+{
+	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
+	dim3 dimGrid(nr_valid_orients, exp_nr_particles, 1);
+	int shared_size;
+	int nr_trans_stride = 4;
+	if (exp_nr_trans <= 4)
+	{
+		shared_size = sizeof(DOUBLE) * (BLOCK_SIZE_128 * exp_nr_trans);
+	}
+	else
+	{
+		shared_size = sizeof(DOUBLE) * (BLOCK_SIZE_128 * nr_trans_stride);
+	}
+	int nr_trans_loop = (exp_nr_trans <= 4) ? 1 : ((exp_nr_trans + (nr_trans_stride - 1)) / nr_trans_stride);
+	calculate_diff2_do_squared_difference_pass0_mask_kernel <<< dimGrid, dimBlock, shared_size>>>(diff2_D,
+	        frefctf_yellow_D,
+	        frefctf_red_D,
+	        Fimg_shift_D,
+	        exp_highres_Xi2_imgs_D,
+	        Minvsigma2_D,
+	        valid_orient_trans_index_D,
+	        exp_nr_particles,
+	        exp_nr_orients,
+	        exp_nr_trans,
+	        exp_nr_oversampled_rot,
+	        exp_nr_oversampled_trans,
+	        nr_valid_orients,
+	        diff_xdim,
+	        image_size,
+	        nr_trans_loop,
+	        nr_trans_stride);
+
+
+}
+
+
+void __global__ apply_CTF_kernel(CUFFT_COMPLEX *Fref_all_shift_D, DOUBLE *exp_Fctf_D, int exp_nr_images, int image_size)
+{
+	int bid_x = blockIdx.x;
+	int tid = threadIdx.x;
+	int global_id = tid + bid_x*blockDim.x;
+
+	if(global_id < exp_nr_images* image_size)
+	{
+		Fref_all_shift_D[global_id].x *= exp_Fctf_D[global_id];
+		Fref_all_shift_D[global_id].y *= exp_Fctf_D[global_id];
+	}
+
+}
+void apply_CTF_gpu(CUFFT_COMPLEX *Fref_all_shift_D, DOUBLE *exp_Fctf_D, int exp_nr_images, int image_size)
+{
+	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
+	dim3 dimGrid((exp_nr_images*image_size+BLOCK_SIZE_128-1)/BLOCK_SIZE_128, 1);
+	apply_CTF_kernel<<<dimGrid, dimBlock>>>(Fref_all_shift_D, exp_Fctf_D, exp_nr_images, image_size);
+	//std::cout<< "sub project end!!!"<< std::endl;
+}
+
+
+void __global__ sub_Yellow_project_kernel(DOUBLE *image_red_D, DOUBLE *project_imgs_D, int exp_nr_images, int image_size)
+{
+	int bid_x = blockIdx.x;
+	int tid = threadIdx.x;
+	int global_id = tid + bid_x*blockDim.x;
+
+	if(global_id < exp_nr_images* image_size)
+	{
+		image_red_D[global_id] -= project_imgs_D[global_id];
+	}
+
+}
+
+void sub_Yellow_project_gpu(DOUBLE* image_red_D, DOUBLE *project_imgs_D, int exp_nr_images,  
+								  int xdim, int ydim)
+{
+	int image_size = xdim*ydim;
+	dim3 dimBlock(BLOCK_SIZE_128, 1, 1);
+	dim3 dimGrid((exp_nr_images*image_size+BLOCK_SIZE_128-1)/BLOCK_SIZE_128, 1);
+	sub_Yellow_project_kernel<<<dimGrid, dimBlock>>>(image_red_D, project_imgs_D, exp_nr_images, image_size);
+
+}
+	
+
+

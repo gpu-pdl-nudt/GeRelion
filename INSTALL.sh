@@ -3,17 +3,19 @@
 #Some flags variables
 BUILD_FFTW=true
 BUILD_FLTK=true
-BUILD_GERELION=true
+BUILD_RELION=true
 N_THREADS=$@
 
-# do we have mpi and fltk?
+#Use single-precision instead of the default of double-precision?
+FLOAT_PRECISION=true
+
 # Set the param below to "false" if you do not have an MPI installation and only want to build the sequential version of RELION
 HAVE_MPI=true
-# Set the param below to "false" if you have trouble compiling fltk and still want to build GERELION without the GUI
+# Set the param below to "false" if you have trouble compiling fltk and still want to build RELION without the GUI
 HAVE_FLTK=true
 
 #Some path variables
-# Note that as of RELION-1.3, the prefix actually needs to be GERELION_HOME. You can move the bin and lib directories elsewhere after building
+# Note that as of RELION-1.3, the prefix actually needs to be RELION_HOME. You can move the bin and lib directories elsewhere after building
 GERELION_HOME=$PWD
 PREFIX=$GERELION_HOME
 
@@ -35,7 +37,12 @@ if $BUILD_FFTW; then
   cd external
   tar -zxf $VFFTW.tar.gz
   cd $VFFTW
-  ./configure --enable-threads --enable-shared prefix=$PREFIX > $GERELION_HOME/external/fftw_build.log
+  if $FLOAT_PRECISION; then
+    float_option=" --enable-float "
+  else
+    float_option=""
+  fi
+  ./configure $float_option --enable-threads --enable-shared prefix=$PREFIX > $GERELION_HOME/external/fftw_build.log
   make $N_THREADS >> $GERELION_HOME/external/fftw_build.log 
   make install >> $GERELION_HOME/external/fftw_build.log 
   cd ../..
@@ -54,7 +61,7 @@ if $BUILD_FLTK; then
   cd ../..
 fi
 
-#################### GERELION ###########################
+#################### RELION ###########################
 if $BUILD_GERELION; then
   echo -e "$GREEN Compiling gerelion ...$ENDC"
   echo -e "See $GERELION_HOME/gerelion_build.log for details"
@@ -66,14 +73,14 @@ if $BUILD_GERELION; then
   fltk_ld=""
  fi
  #if $HAVE_MPI; then
- # ./configure prefix=$PREFIX --enable-mpi CPPFLAGS="-I$PREFIX/include $fltk_cxx"  LDFLAGS="-L$PREFIX/lib $fltk_ld" > $GERELION_HOME/gerelion_build.log
+ # ./configure prefix=$PREFIX --enable-mpi CPPFLAGS="-I$PREFIX/include $fltk_cxx"  LDFLAGS="-L$PREFIX/lib $fltk_ld" > $RELION_HOME/relion_build.log
  #else
- # ./configure prefix=$PREFIX CPPFLAGS="-I$PREFIX/include $fltk_cxx"  LDFLAGS="-L$PREFIX/lib $fltk_ld" > $GERELION_HOME/gerelion_build.log
+ # ./configure prefix=$PREFIX CPPFLAGS="-I$PREFIX/include $fltk_cxx"  LDFLAGS="-L$PREFIX/lib $fltk_ld" > $RELION_HOME/relion_build.log
  #fi
  make $N_THREADS >> $GERELION_HOME/gerelion_build.log
- #make install >> $GERELION_HOME/gerelion_build.log
- #mv $GERELION_HOME/bin/GERELION_maingui $PREFIX/bin/GERELION 
- #cp $GERELION_HOME/scripts/qsub.csh $PREFIX/bin/qsub.csh
+ #make install >> $RELION_HOME/relion_build.log
+ #mv $RELION_HOME/bin/relion_maingui $PREFIX/bin/relion 
+ #cp $RELION_HOME/scripts/qsub.csh $PREFIX/bin/qsub.csh
 fi
 
 echo "Done!"

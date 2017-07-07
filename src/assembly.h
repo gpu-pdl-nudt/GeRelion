@@ -35,13 +35,13 @@ public:
         std::string name;
 
         // Coordinates
-        Matrix1D<double> coords;
+        Matrix1D<DOUBLE> coords;
 
         // Occupancy
-        double occupancy;
+        DOUBLE occupancy;
 
         // B-factor
-        double bfactor;
+        DOUBLE bfactor;
 
         // Empty constructor
         Atom()
@@ -66,7 +66,7 @@ public:
         void clear();
 
         // Get the 3D corrdinates as a POint3D
-        Matrix1D<double> getCoordinates();
+        Matrix1D<DOUBLE> getCoordinates();
 };
 
 
@@ -106,7 +106,7 @@ public:
         void clear();
 
         // Add an Atom to this Residue;
-        long int addAtom(std::string atomname, double x, double y, double z, double occ = 1.0, double bfac = 0.0);
+        long int addAtom(std::string atomname, DOUBLE x, DOUBLE y, DOUBLE z, DOUBLE occ = 1.0, DOUBLE bfac = 0.0);
 
         int numberOfAtoms()
         {
@@ -245,7 +245,7 @@ public:
         void checkBreaksInResidueNumbering(int maximum_residue_break = 500);
 
         // Apply a transformation (first rotation, then shift)
-        void applyTransformation(Matrix2D<double> &mat, Matrix1D<double> &shift);
+        void applyTransformation(Matrix2D<DOUBLE> &mat, Matrix1D<DOUBLE> &shift);
 
 };
 

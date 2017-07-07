@@ -30,7 +30,7 @@ unsigned long  gettypesize(DataType type)
         case UShort: case Short: size = sizeof(short); break;
         case UInt:	 case Int:   size = sizeof(int); break;
         case Float:              size = sizeof(float); break;
-        case Double:             size = sizeof(double); break;
+        case Double:             size = sizeof(DOUBLE); break;
         case Bool:				  size = sizeof(bool); break;
         default: size = 0;
     }
@@ -71,10 +71,10 @@ int datatypeString2Int(std::string s)
 }
 
 // Some image-specific operations
-void normalise(Image<double> &I, int bg_radius, double white_dust_stddev, double black_dust_stddev)
+void normalise(Image<DOUBLE> &I, int bg_radius, DOUBLE white_dust_stddev, DOUBLE black_dust_stddev)
 {
 	int bg_radius2 = bg_radius * bg_radius;
-	double avg, stddev;
+	DOUBLE avg, stddev;
 
 	if (2*bg_radius > XSIZE(I()))
 		REPORT_ERROR("normalise ERROR: 2*bg_radius is larger than image size!");
@@ -105,10 +105,10 @@ void normalise(Image<double> &I, int bg_radius, double white_dust_stddev, double
 	}
 }
 
-void calculateBackgroundAvgStddev(Image<double> &I, double &avg, double &stddev, int bg_radius)
+void calculateBackgroundAvgStddev(Image<DOUBLE> &I, DOUBLE &avg, DOUBLE &stddev, int bg_radius)
 {
 	int bg_radius2 = bg_radius * bg_radius;
-	double n = 0.;
+	DOUBLE n = 0.;
 	avg = 0.;
 	stddev = 0.;
 
@@ -128,18 +128,18 @@ void calculateBackgroundAvgStddev(Image<double> &I, double &avg, double &stddev,
 	{
 		if (k*k + i*i + j*j > bg_radius2)
 		{
-			double aux = A3D_ELEM(I(), k, i, j) - avg;
+			DOUBLE aux = A3D_ELEM(I(), k, i, j) - avg;
 			stddev += aux * aux;
 		}
 	}
 	stddev = sqrt(stddev/n);
 }
 
-void removeDust(Image<double> &I, bool is_white, double thresh, double avg, double stddev)
+void removeDust(Image<DOUBLE> &I, bool is_white, DOUBLE thresh, DOUBLE avg, DOUBLE stddev)
 {
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(I())
 	{
-		double aux =  A3D_ELEM(I(), k, i, j);
+		DOUBLE aux =  A3D_ELEM(I(), k, i, j);
 		if (is_white && aux - avg > thresh * stddev)
 			A3D_ELEM(I(), k, i, j) = rnd_gaus(avg, stddev);
 		else if (!is_white && aux - avg < -thresh * stddev)
@@ -147,7 +147,7 @@ void removeDust(Image<double> &I, bool is_white, double thresh, double avg, doub
 	}
 }
 
-void invert_contrast(Image<double> &I)
+void invert_contrast(Image<DOUBLE> &I)
 {
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I())
 	{
@@ -155,33 +155,33 @@ void invert_contrast(Image<double> &I)
 	}
 }
 
-void rescale(Image<double> &I, int mysize)
+void rescale(Image<DOUBLE> &I, int mysize)
 {
 	int olddim = XSIZE(I());
 
 	resizeMap(I(), mysize);
 
 	// Also modify the scale in the MDmainheader (if present)
-	double oldscale, newscale;
+	DOUBLE oldscale, newscale;
     if (I.MDMainHeader.getValue(EMDL_IMAGE_SAMPLINGRATE_X, oldscale))
     {
-    	newscale = oldscale * (double)olddim / (double)mysize;
+    	newscale = oldscale * (DOUBLE)olddim / (DOUBLE)mysize;
     	I.MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_X, newscale);
     }
     if (I.MDMainHeader.getValue(EMDL_IMAGE_SAMPLINGRATE_Y, oldscale))
     {
-    	newscale = oldscale * (double)olddim / (double)mysize;
+    	newscale = oldscale * (DOUBLE)olddim / (DOUBLE)mysize;
     	I.MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_Y, newscale);
     }
     if (I().getDim() == 3 && I.MDMainHeader.getValue(EMDL_IMAGE_SAMPLINGRATE_Z, oldscale) )
     {
-    	newscale = oldscale * (double)olddim / (double)mysize;
+    	newscale = oldscale * (DOUBLE)olddim / (DOUBLE)mysize;
     	I.MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_Z, newscale);
     }
 
 }
 
-void rewindow(Image<double> &I, int mysize)
+void rewindow(Image<DOUBLE> &I, int mysize)
 {
 	// Check 2D or 3D dimensionality
 	if (I().getDim() == 2)

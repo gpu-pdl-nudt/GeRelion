@@ -15,6 +15,18 @@ The _*.cu_ source files  and their corresponding header files in directory _src_
 The _*.cpp_ source files  and their corresponding header files in directory _src_ are from relion-1.3.
 Some of the _*.ccp_ and _*.hpp_ files from relion are modified by GeRelion team.
 
+We integrated a new algorithm into GeRelion, named dynamic singal subtraction (DSS). The parameters required for DSS are --red_mask and --yellow_map (or --yellow_mask).
+
+--red_mask (red_mask_file): User-provided mask for the wanted region. During DSS, GeRelion multiplies the 3D reconstruction from the last iteration with this mask to generate the reference map of the wanted region.  
+
+--yellow_mask (yellow_mask_file): User-provided mask for the unwanted region. During DSS, GeRelion multiplies the 3D reconstruction from the last iteration with this mask to generate the reference map of the unwanted region, i.e. ¿yellow map¿. This yellow map is used to generate 2D projections, which are then subtracted from the original particle images. 
+
+--yellow_map (yellow_map_file): User-provided ¿yellow map¿, which will be used in every iteration. When --yellow map is present, --yellow_mask is ignored. (The unwanted region often becomes weaker during iterative refinement, and thus contains not enough signal for subtraction. Therefore, it is often preferred to use a fixed ¿yellow_map¿ instead of a ¿yellow_mask¿ to generate ¿yellow_map¿ during iterations.)
+
+--extra_iter (0): Extra number of iterations to perform. GeRelion auto-refine iterates additional n cycles even after the convergence is achieved.
+
+--fsc_mask (fsc_mask_file): User-provided mask to be applied on the half volumes before FSC calculation.
+
 ## Prerequisites
 ----------------
 1. Hardware requirements

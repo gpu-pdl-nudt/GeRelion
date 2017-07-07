@@ -22,8 +22,8 @@
 #include "src/matrix2d.h"
 
 /* Interface to numerical recipes: svbksb ---------------------------------- */
-void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
-            Matrix1D<double> &b, Matrix1D<double> &x)
+void svbksb(Matrix2D<DOUBLE> &u, Matrix1D<DOUBLE> &w, Matrix2D<DOUBLE> &v,
+            Matrix1D<DOUBLE> &b, Matrix1D<DOUBLE> &x)
 {
     // Call to the numerical recipes routine. Results will be stored in X
     svbksb(u.adaptForNumericalRecipes2(),

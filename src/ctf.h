@@ -54,69 +54,69 @@ class CTF
 protected:
 
     // Different constants
-    double K1;
-    double K2;
-    double K3;
-    double K4;
+    DOUBLE K1;
+    DOUBLE K2;
+    DOUBLE K3;
+    DOUBLE K4;
 
     // Azimuthal angle in radians
-    double rad_azimuth;
+    DOUBLE rad_azimuth;
 
     // defocus_average = (defocus_u + defocus_v)/2
-    double defocus_average;
+    DOUBLE defocus_average;
 
     // defocus_deviation = (defocus_u - defocus_v)/2
-    double defocus_deviation;
+    DOUBLE defocus_deviation;
 
 public:
 
     /// Accelerating Voltage (in KiloVolts)
-    double kV;
+    DOUBLE kV;
 
     /// Defocus in U (in Angstroms). Positive values are underfocused
-    double DeltafU;
+    DOUBLE DeltafU;
 
     /// Defocus in V (in Angstroms). Postive values are underfocused
-    double DeltafV;
+    DOUBLE DeltafV;
 
     /// Azimuthal angle (between X and U) in degrees
-    double azimuthal_angle;
+    DOUBLE azimuthal_angle;
 
     // Electron wavelength (Amstrongs)
-    double lambda;
+    DOUBLE lambda;
 
     // Radius of the aperture (in micras)
-    // double aperture;
+    // DOUBLE aperture;
     /// Spherical aberration (in milimeters). Typical value 5.6
-    double Cs;
+    DOUBLE Cs;
 
     /// Chromatic aberration (in milimeters). Typical value 2
-    double Ca;
+    DOUBLE Ca;
 
     /** Mean energy loss (eV) due to interaction with sample.
         Typical value 1*/
-    double espr;
+    DOUBLE espr;
 
     /// Objective lens stability (deltaI/I) (ppm). Typical value 1
-    double ispr;
+    DOUBLE ispr;
 
     /// Convergence cone semiangle (in mrad). Typical value 0.5
-    double alpha;
+    DOUBLE alpha;
 
     /// Longitudinal mechanical displacement (Angstrom). Typical value 100
-    double DeltaF;
+    DOUBLE DeltaF;
 
     /// Transversal mechanical displacement (Angstrom). Typical value 3
-    double DeltaR;
+    DOUBLE DeltaR;
 
     /// Amplitude contrast. Typical values 0.07 for cryo, 0.2 for negative stain
-    double Q0;
+    DOUBLE Q0;
 
     // B-factor fall-off
-    double Bfac;
+    DOUBLE Bfac;
 
     // Overall scale-factor of CTF
-    double scale;
+    DOUBLE scale;
 
     /** Empty constructor. */
     CTF() { clear(); }
@@ -129,8 +129,8 @@ public:
     void read(MetaDataTable &MD1, MetaDataTable &MD2, long int objectID = -1);
 
     /** Just set all values explicitly */
-    void setValues(double _defU, double _defV, double _defAng,
-    		double _voltage, double _Cs, double _Q0, double _Bfac, double _scale = 1.);
+    void setValues(DOUBLE _defU, DOUBLE _defV, DOUBLE _defAng,
+    		DOUBLE _voltage, DOUBLE _Cs, DOUBLE _Q0, DOUBLE _Bfac, DOUBLE _scale = 1.);
 
     /** Read from a single MetaDataTable */
     void read(MetaDataTable &MD);
@@ -146,28 +146,28 @@ public:
     void initialise();
 
     /// Compute CTF at (U,V). Continuous frequencies
-    inline double getCTF(double X, double Y,
+    inline DOUBLE getCTF(DOUBLE X, DOUBLE Y,
     		bool do_abs = false, bool do_only_flip_phases = false, bool do_intact_until_first_peak = false, bool do_damping = true) const
     {
-        double u2 = X * X + Y * Y;
-        double u = sqrt(u2);
-        double u4 = u2 * u2;
+        DOUBLE u2 = X * X + Y * Y;
+        DOUBLE u = sqrt(u2);
+        DOUBLE u4 = u2 * u2;
         // if (u2>=ua2) return 0;
-        double deltaf = getDeltaF(X, Y);
-        double argument = K1 * deltaf * u2 + K2 * u4;
-        double retval;
+        DOUBLE deltaf = getDeltaF(X, Y);
+        DOUBLE argument = K1 * deltaf * u2 + K2 * u4;
+        DOUBLE retval;
         if (do_intact_until_first_peak && ABS(argument) < PI/2.)
         {
         	retval = 1.;
         }
         else
         {
-        	double sine_part,cosine_part;
+        	DOUBLE sine_part,cosine_part;
             retval = -(K3*sin(argument) - Q0*cos(argument)); // Q0 should be positive
         }
         if (do_damping)
         {
-        	double E = exp(K4 * u2); // B-factor decay (K4 = -Bfac/4);
+        	DOUBLE E = exp(K4 * u2); // B-factor decay (K4 = -Bfac/4);
         	retval *= E;
         }
         if (do_abs)
@@ -182,13 +182,13 @@ public:
     }
 
     /// Compute Deltaf at a given direction
-    inline double getDeltaF(double X, double Y) const
+    inline DOUBLE getDeltaF(DOUBLE X, DOUBLE Y) const
     {
         if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
             ABS(Y) < XMIPP_EQUAL_ACCURACY)
             return 0;
 
-        double ellipsoid_ang = atan2(Y, X) - rad_azimuth;
+        DOUBLE ellipsoid_ang = atan2(Y, X) - rad_azimuth;
         /*
         * For a derivation of this formulae confer
         * Principles of Electron Optics page 1380
@@ -197,18 +197,18 @@ public:
         * of the zernike polynomials difference of defocus at 0
         * and at 45 degrees. In this case a2=0
         */
-        double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
+        DOUBLE cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
         return (defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
 
     }
 
     /// Generate (Fourier-space, i.e. FFTW format) image with all CTF values.
     /// The dimensions of the result array should have been set correctly already
-    void getFftwImage(MultidimArray < double > &result, int orixdim, int oriydim, double angpix,
+    void getFftwImage(MultidimArray < DOUBLE > &result, int orixdim, int oriydim, DOUBLE angpix,
     		bool do_abs = false, bool do_only_flip_phases = false, bool do_intact_until_first_peak = false, bool do_damping = true);
 
     /// Generate a centered image (with hermitian symmetry)
-    void getCenteredImage(MultidimArray < double > &result, double angpix,
+    void getCenteredImage(MultidimArray < DOUBLE > &result, DOUBLE angpix,
     		bool do_abs = false, bool do_only_flip_phases = false, bool do_intact_until_first_peak = false, bool do_damping = true);
 
 

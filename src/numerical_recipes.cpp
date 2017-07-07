@@ -72,11 +72,11 @@ void nrerror(const char error_text[])
 #define IC3 51349
 
 /* Chapter 7 Section 1: UNIFORM RANDOM NUMBERS */
-double ran1(int *idum)
+DOUBLE ran1(int *idum)
 {
     static long ix1, ix2, ix3;
-    static double r[98];
-    double temp;
+    static DOUBLE r[98];
+    DOUBLE temp;
     static int iff = 0;
     int j;
 
@@ -120,11 +120,11 @@ double ran1(int *idum)
 #undef IC3
 
 /* Chapter 7 Section 3: GAUSSIAN RANDOM NUMBERS */
-double gasdev(int *idum)
+DOUBLE gasdev(int *idum)
 {
     static int iset = 0;
-    static double gset;
-    double fac, r, v1, v2;
+    static DOUBLE gset;
+    DOUBLE fac, r, v1, v2;
 
     if (iset == 0)
     {
@@ -150,11 +150,11 @@ double gasdev(int *idum)
 // t-distribution (nor Numerical Recipes, but Mathematics of Computation, vol. 62, 779-781.
 // I downloaded sem-code from http://ideas.repec.org/c/ega/comcod/200703.html
 // Sjors May 2008
-double tdev(double nu, int *idum)
+DOUBLE tdev(DOUBLE nu, int *idum)
 {
     static int iset = 0;
-    static double gset;
-    double fac, r, v1, v2;
+    static DOUBLE gset;
+    DOUBLE fac, r, v1, v2;
 
     if (iset == 0)
     {
@@ -181,10 +181,10 @@ double tdev(double nu, int *idum)
 /* BESSEL FUNCTIONS -------------------------------------------------------- */
 /* CO: They may not come in the numerical recipes but it is not a bad
    idea to put them here, in fact they come from Gabor's group in Feb'84     */
-double bessj0(double x)
+DOUBLE bessj0(DOUBLE x)
 {
-    double ax, z;
-    double xx, y, ans, ans1, ans2;
+    DOUBLE ax, z;
+    DOUBLE xx, y, ans, ans1, ans2;
 
     if ((ax = fabs(x)) < 8.0)
     {
@@ -217,9 +217,9 @@ double bessj0(double x)
 }
 
 /*............................................................................*/
-double bessi0(double x)
+DOUBLE bessi0(DOUBLE x)
 {
-    double y, ax, ans;
+    DOUBLE y, ax, ans;
     if ((ax = fabs(x)) < 3.75)
     {
         y = x / 3.75;
@@ -239,10 +239,10 @@ double bessi0(double x)
 }
 
 /*............................................................................*/
-double bessi1(double x)
+DOUBLE bessi1(DOUBLE x)
 {
-    double ax, ans;
-    double y;
+    DOUBLE ax, ans;
+    DOUBLE y;
     if ((ax = fabs(x)) < 3.75)
     {
         y = x / 3.75;
@@ -263,9 +263,9 @@ double bessi1(double x)
 }
 
 /* General Bessel functions ------------------------------------------------ */
-double chebev(double a, double b, double c[], int m, double x)
+DOUBLE chebev(DOUBLE a, DOUBLE b, DOUBLE c[], int m, DOUBLE x)
 {
-    double d = 0.0, dd = 0.0, sv, y, y2;
+    DOUBLE d = 0.0, dd = 0.0, sv, y, y2;
     int j;
 
     if ((x - a)*(x - b) > 0.0)
@@ -282,16 +282,16 @@ double chebev(double a, double b, double c[], int m, double x)
 #define NUSE1 5
 #define NUSE2 5
 
-void beschb(double x, double *gam1, double *gam2, double *gampl, double *gammi)
+void beschb(DOUBLE x, DOUBLE *gam1, DOUBLE *gam2, DOUBLE *gampl, DOUBLE *gammi)
 {
-    double xx;
-    static double c1[] =
+    DOUBLE xx;
+    static DOUBLE c1[] =
         {
             -1.142022680371172e0, 6.516511267076e-3,
             3.08709017308e-4, -3.470626964e-6, 6.943764e-9,
             3.6780e-11, -1.36e-13
         };
-    static double c2[] =
+    static DOUBLE c2[] =
         {
             1.843740587300906e0, -0.076852840844786e0,
             1.271927136655e-3, -4.971736704e-6, -3.3126120e-8,
@@ -312,10 +312,10 @@ void beschb(double x, double *gam1, double *gam2, double *gampl, double *gammi)
 #define FPMIN 1.0e-30
 #define MAXIT 10000
 #define XMIN 2.0
-void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *ryp)
+void bessjy(DOUBLE x, DOUBLE xnu, DOUBLE *rj, DOUBLE *ry, DOUBLE *rjp, DOUBLE *ryp)
 {
     int i, isign, l, nl;
-    double a, b, br, bi, c, cr, ci, d, del, del1, den, di, dlr, dli, dr, e, f, fact, fact2,
+    DOUBLE a, b, br, bi, c, cr, ci, d, del, del1, den, di, dlr, dli, dr, e, f, fact, fact2,
     fact3, ff, gam, gam1, gam2, gammi, gampl, h, p, pimu, pimu2, q, r, rjl,
     rjl1, rjmu, rjp1, rjpl, rjtemp, ry1, rymu, rymup, rytemp, sum, sum1,
     temp, w, x2, xi, xi2, xmu, xmu2;
@@ -478,52 +478,52 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
 #undef XMIN
 
 /*............................................................................*/
-double bessi0_5(double x)
+DOUBLE bessi0_5(DOUBLE x)
 {
     return (x == 0) ? 0 : sqrt(2 / (PI*x))*sinh(x);
 }
-double bessi1_5(double x)
+DOUBLE bessi1_5(DOUBLE x)
 {
     return (x == 0) ? 0 : sqrt(2 / (PI*x))*(cosh(x) - sinh(x) / x);
 }
-double bessi2(double x)
+DOUBLE bessi2(DOUBLE x)
 {
     return (x == 0) ? 0 : bessi0(x) - ((2*1) / x) * bessi1(x);
 }
-double bessi2_5(double x)
+DOUBLE bessi2_5(DOUBLE x)
 {
     return (x == 0) ? 0 : bessi0_5(x) - ((2*1.5) / x) * bessi1_5(x);
 }
-double bessi3(double x)
+DOUBLE bessi3(DOUBLE x)
 {
     return (x == 0) ? 0 : bessi1(x) - ((2*2) / x) * bessi2(x);
 }
-double bessi3_5(double x)
+DOUBLE bessi3_5(DOUBLE x)
 {
     return (x == 0) ? 0 : bessi1_5(x) - ((2*2.5) / x) * bessi2_5(x);
 }
-double bessi4(double x)
+DOUBLE bessi4(DOUBLE x)
 {
     return (x == 0) ? 0 : bessi2(x) - ((2*3) / x) * bessi3(x);
 }
-double bessj1_5(double x)
+DOUBLE bessj1_5(DOUBLE x)
 {
-    double rj, ry, rjp, ryp;
+    DOUBLE rj, ry, rjp, ryp;
     bessjy(x, 1.5, &rj, &ry, &rjp, &ryp);
     return rj;
 }
-double bessj3_5(double x)
+DOUBLE bessj3_5(DOUBLE x)
 {
-    double rj, ry, rjp, ryp;
+    DOUBLE rj, ry, rjp, ryp;
     bessjy(x, 3.5, &rj, &ry, &rjp, &ryp);
     return rj;
 }
 
 /* Special functions ------------------------------------------------------- */
-double gammln(double xx)
+DOUBLE gammln(DOUBLE xx)
 {
-    double x, tmp, ser;
-    static double cof[6] =
+    DOUBLE x, tmp, ser;
+    static DOUBLE cof[6] =
         {
             76.18009173, -86.50532033, 24.01409822,
             -1.231739516, 0.120858003e-2, -0.536382e-5
@@ -543,9 +543,9 @@ double gammln(double xx)
 }
 
 
-double betai(double a, double b, double x)
+DOUBLE betai(DOUBLE a, DOUBLE b, DOUBLE x)
 {
-    double bt;
+    DOUBLE bt;
     if (x < 0.0 || x > 1.0)
         nrerror("Bad x in routine BETAI");
     if (x == 0.0 || x == 1.0)
@@ -561,11 +561,11 @@ double betai(double a, double b, double x)
 
 #define ITMAX 100
 #define EPS 3.0e-7
-double betacf(double a, double b, double x)
+DOUBLE betacf(DOUBLE a, DOUBLE b, DOUBLE x)
 {
-    double qap, qam, qab, em, tem, d;
-    double bz, bm = 1.0, bp, bpp;
-    double az = 1.0, am = 1.0, ap, app, aold;
+    DOUBLE qap, qam, qab, em, tem, d;
+    DOUBLE bz, bm = 1.0, bp, bpp;
+    DOUBLE az = 1.0, am = 1.0, ap, app, aold;
     int m;
 
     qab = a + b;
@@ -574,7 +574,7 @@ double betacf(double a, double b, double x)
     bz = 1.0 - qab * x / qap;
     for (m = 1;m <= ITMAX;m++)
     {
-        em = (double) m;
+        em = (DOUBLE) m;
         tem = em + em;
         d = em * (b - em) * x / ((qam + tem) * (a + tem));
         ap = az + d * am;
@@ -610,12 +610,12 @@ double betacf(double a, double b, double x)
         xt[j] = pcom[j] + x * xicom[j]; \
     f = (*func)(xt,prm);}
 
-void mnbrak(double *ax, double *bx, double *cx,
-            double *fa, double *fb, double *fc, double(*func)(double *, void*),
-            void *prm, int ncom, double *pcom, double *xicom)
+void mnbrak(DOUBLE *ax, DOUBLE *bx, DOUBLE *cx,
+            DOUBLE *fa, DOUBLE *fb, DOUBLE *fc, DOUBLE(*func)(DOUBLE *, void*),
+            void *prm, int ncom, DOUBLE *pcom, DOUBLE *xicom)
 {
-    double ulim, u, r, q, fu, dum;
-    double *xt=NULL;
+    DOUBLE ulim, u, r, q, fu, dum;
+    DOUBLE *xt=NULL;
     ask_Tvector(xt, 1, ncom);
 
     F1DIM(*ax,*fa);
@@ -660,7 +660,7 @@ void mnbrak(double *ax, double *bx, double *cx,
             if (fu < *fc)
             {
                 SHFT(*bx, *cx, u, *cx + GOLD*(*cx - *bx))
-                double aux; F1DIM(u,aux);
+                DOUBLE aux; F1DIM(u,aux);
                 SHFT(*fb, *fc, fu, aux)
             }
         }
@@ -688,14 +688,14 @@ void mnbrak(double *ax, double *bx, double *cx,
 #define ITMAX 100
 #define CGOLD 0.3819660
 #define ZEPS 1.0e-10
-double brent(double ax, double bx, double cx, double(*func)(double *,void*),
-             void *prm, double tol, double *xmin,
-             int ncom, double *pcom, double *xicom)
+DOUBLE brent(DOUBLE ax, DOUBLE bx, DOUBLE cx, DOUBLE(*func)(DOUBLE *,void*),
+             void *prm, DOUBLE tol, DOUBLE *xmin,
+             int ncom, DOUBLE *pcom, DOUBLE *xicom)
 {
     int iter;
-    double a, b, d, etemp, fu, fv, fw, fx, p, q, r, tol1, tol2, u, v, w, x, xm;
-    double e = 0.0;
-    double *xt=NULL;
+    DOUBLE a, b, d, etemp, fu, fv, fw, fx, p, q, r, tol1, tol2, u, v, w, x, xm;
+    DOUBLE e = 0.0;
+    DOUBLE *xt=NULL;
     ask_Tvector(xt, 1, ncom);
 
     a = (ax < cx ? ax : cx);
@@ -781,15 +781,15 @@ double brent(double ax, double bx, double cx, double(*func)(double *,void*),
 #undef F1DIM
 
 #define TOL 2.0e-4
-void linmin(double *p, double *xi, int n, double &fret,
-            double(*func)(double *, void*), void *prm)
+void linmin(DOUBLE *p, DOUBLE *xi, int n, DOUBLE &fret,
+            DOUBLE(*func)(DOUBLE *, void*), void *prm)
 {
     int j;
-    double xx, xmin, fx, fb, fa, bx, ax;
+    DOUBLE xx, xmin, fx, fb, fa, bx, ax;
 
     int ncom = n;
-    double *pcom=NULL;
-    double *xicom=NULL;
+    DOUBLE *pcom=NULL;
+    DOUBLE *xicom=NULL;
     ask_Tvector(pcom, 1, n);
     ask_Tvector(xicom, 1, n);
     for (j = 1;j <= n;j++)
@@ -813,13 +813,13 @@ void linmin(double *p, double *xi, int n, double &fret,
 #undef TOL
 
 #define ITMAX 200
-void powell(double *p, double *xi, int n, double ftol, int &iter,
-            double &fret, double(*func)(double *, void *), void *prm,
+void powell(DOUBLE *p, DOUBLE *xi, int n, DOUBLE ftol, int &iter,
+            DOUBLE &fret, DOUBLE(*func)(DOUBLE *, void *), void *prm,
             bool show)
 {
     int i, ibig, j;
-    double t, fptt, fp, del;
-    double *pt, *ptt, *xit;
+    DOUBLE t, fptt, fp, del;
+    DOUBLE *pt, *ptt, *xit;
     bool   different_from_0;
 
     ask_Tvector(pt, 1, n);
@@ -915,9 +915,9 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
 
 /* Singular value descomposition ------------------------------------------- */
 /* Copied from Bilib library (linearalgebra.h) */
-double Pythag(double a, double b)
+DOUBLE Pythag(DOUBLE a, DOUBLE b)
 {
-    double absa, absb;
+    DOUBLE absa, absb;
     absa = fabs(a);
     absb = fabs(b);
     if (absb < absa)
@@ -927,12 +927,12 @@ double Pythag(double a, double b)
 }
 
 #define SVDMAXITER 1000
-void svdcmp(double *U, int Lines, int Columns, double *W, double *V)
+void svdcmp(DOUBLE *U, int Lines, int Columns, DOUBLE *W, DOUBLE *V)
 {
-    double *rv1 = (double *)NULL;
-    double Norm, Scale;
-    double c, f, g, h, s;
-    double x, y, z;
+    DOUBLE *rv1 = (DOUBLE *)NULL;
+    DOUBLE Norm, Scale;
+    DOUBLE c, f, g, h, s;
+    DOUBLE x, y, z;
     long i, its, j, jj, k, l = 0L, nm = 0L;
     bool    Flag;
     int     MaxIterations = SVDMAXITER;
@@ -1216,10 +1216,10 @@ void svdcmp(double *U, int Lines, int Columns, double *W, double *V)
     free_Tvector(rv1, 0, Columns*Columns - 1);
 }
 
-void svbksb(double *u, double *w, double *v, int m, int n, double *b, double *x)
+void svbksb(DOUBLE *u, DOUBLE *w, DOUBLE *v, int m, int n, DOUBLE *b, DOUBLE *x)
 {
     int jj, j, i;
-    double s, *tmp;
+    DOUBLE s, *tmp;
 
     ask_Tvector(tmp, 1, n);
     for (j = 1;j <= n;j++)
@@ -1248,10 +1248,10 @@ void svbksb(double *u, double *w, double *v, int m, int n, double *b, double *x)
 #define ITMAX 100
 #define EPS 3.0e-7
 
-void gser(double *gamser, double a, double x, double *gln)
+void gser(DOUBLE *gamser, DOUBLE a, DOUBLE x, DOUBLE *gln)
 {
     int n;
-    double sum, del, ap;
+    DOUBLE sum, del, ap;
 
     *gln = gammln(a);
     if (x <= 0.0)
@@ -1287,10 +1287,10 @@ void gser(double *gamser, double a, double x, double *gln)
 #define EPS 3.0e-7
 #define FPMIN 1.0e-30
 
-void gcf(double *gammcf, double a, double x, double *gln)
+void gcf(DOUBLE *gammcf, DOUBLE a, DOUBLE x, DOUBLE *gln)
 {
     int i;
-    double an, b, c, d, del, h;
+    DOUBLE an, b, c, d, del, h;
 
     *gln = gammln(a);
     b = x + 1.0 - a;
@@ -1321,9 +1321,9 @@ void gcf(double *gammcf, double a, double x, double *gln)
 #undef EPS
 #undef FPMIN
 
-double gammp(double a, double x)
+DOUBLE gammp(DOUBLE a, DOUBLE x)
 {
-    double gamser, gammcf, gln;
+    DOUBLE gamser, gammcf, gln;
 
     if (x < 0.0 || a <= 0.0)
         nrerror("Invalid arguments in routine gammp");

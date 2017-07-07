@@ -21,17 +21,17 @@
 #define COMPLEX_H_
 #include <iostream>
 #include <cmath>
-
+#include "src/macros.h"
 class Complex
 {
 
 	public:
 
-	double real;
-	double imag;
+	DOUBLE real;
+	DOUBLE imag;
 
     // Constructor
-	Complex(double _r = 0.0, double _i = 0.0);
+	Complex(DOUBLE _r = 0.0, DOUBLE _i = 0.0);
 
     Complex operator+(Complex &op);
     void operator+=(Complex &op);
@@ -41,42 +41,42 @@ class Complex
 
     Complex operator*(Complex &op);
 
-    void operator*=(double op);
+    void operator*=(DOUBLE op);
 
-    Complex operator*(double op);
+    Complex operator*(DOUBLE op);
 
     Complex operator/(Complex &op);
 
-    Complex operator/(double op);
+    Complex operator/(DOUBLE op);
 
-    void operator/=(double op);
+    void operator/=(DOUBLE op);
 
     // Complex conjugated
     Complex conj();
 
     // Abs value: sqrt(real*real+imag*imag)
-    double abs();
+    DOUBLE abs();
 
     // Norm value: real*real+imag*imag
-    double norm();
+    DOUBLE norm();
 
     // Phase angle: atan2(imag,real)
-    double arg();
+    DOUBLE arg();
 
 
 };
 
 Complex conj(const Complex& op);
-double abs(const Complex& op);
-double norm(const Complex& op);
-double arg(const Complex& op);
+DOUBLE abs(const Complex& op);
+DOUBLE norm(const Complex& op);
+DOUBLE arg(const Complex& op);
 
 Complex operator+(const Complex& lhs, const Complex& rhs);
 Complex operator-(const Complex& lhs, const Complex& rhs);
 Complex operator*(const Complex& lhs, const Complex& rhs);
-Complex operator*(const Complex& lhs, const double& val);
-Complex operator*(const double& val, const Complex& rhs);
-Complex operator/(const Complex& lhs, const double& val);
+Complex operator*(const Complex& lhs, const DOUBLE& val);
+Complex operator*(const DOUBLE& val, const Complex& rhs);
+Complex operator/(const Complex& lhs, const DOUBLE& val);
 
 void operator+=(Complex& lhs, const Complex& rhs);
 void operator-=(Complex& lhs, const Complex& rhs);

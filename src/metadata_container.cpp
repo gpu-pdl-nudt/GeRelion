@@ -61,7 +61,7 @@ void MetaDataContainer::insertVoidPtr(EMDLabel name, void * value)
     if (values[name])
     {
         if (EMDL::isDouble(name))
-            delete (double*)values[name];
+            delete (DOUBLE*)values[name];
         else if (EMDL::isInt(name))
             delete (int*)values[name];
         else if (EMDL::isLong(name))
@@ -106,7 +106,7 @@ void MetaDataContainer::copy(const MetaDataContainer &MDc)
 
             if (EMDL::isDouble(lCode))
             {
-                addValue(lCode, *((double *) aux));
+                addValue(lCode, *((DOUBLE *) aux));
             }
             else if (EMDL::isString(lCode))
             {
@@ -147,14 +147,14 @@ void MetaDataContainer::addValue(const std::string &name,
     EMDLabel lCode = EMDL::str2Label(name);
     std::istringstream i(value);
 
-    // Look for a double value
+    // Look for a DOUBLE value
     if (EMDL::isDouble(lCode))
     {
-        double doubleValue;
+        DOUBLE DOUBLEValue;
 
-        i >> doubleValue;
+        i >> DOUBLEValue;
 
-        addValue(lCode, doubleValue);
+        addValue(lCode, DOUBLEValue);
     }
     else if (EMDL::isString(lCode))
     {
@@ -185,16 +185,27 @@ void MetaDataContainer::addValue(const std::string &name,
         addValue(lCode, boolValue);
     }
 }
-
+#ifdef FLOAT_PRECISION
 void MetaDataContainer::addValue(EMDLabel name, const double &value)
 {
     if (EMDL::isDouble(name))
     {
-    	void * newValue = (void *) (new double(value));
+    	void * newValue = (void *) (new float(value));
     	insertVoidPtr(name, newValue);
     }
     else
-    	REPORT_ERROR("addValue for double: label " + EMDL::label2Str(name) + " is not of type double!");
+    	REPORT_ERROR("addValue for float: label " + EMDL::label2Str(name) + " is not of type float!");
+}
+#endif
+void MetaDataContainer::addValue(EMDLabel name, const DOUBLE &value)
+{
+    if (EMDL::isDouble(name))
+    {
+    	void * newValue = (void *) (new DOUBLE(value));
+    	insertVoidPtr(name, newValue);
+    }
+    else
+    	REPORT_ERROR("addValue for DOUBLE: label " + EMDL::label2Str(name) + " is not of type DOUBLE!");
 }
 
 void MetaDataContainer::addValue(EMDLabel name, const int &value)
@@ -247,7 +258,7 @@ void MetaDataContainer::addDefaultValue(EMDLabel name)
 	void * newValue;
 	if (EMDL::isDouble(name))
     {
-    	newValue = (void *) (new double(0.));
+    	newValue = (void *) (new DOUBLE(0.));
     }
     else if (EMDL::isInt(name) || EMDL::isLong(name))
     {
@@ -268,7 +279,7 @@ void MetaDataContainer::addDefaultValue(EMDLabel name)
 
 }
 
-bool MetaDataContainer::getValue( const EMDLabel name, double &value)
+bool MetaDataContainer::getValue( const EMDLabel name, DOUBLE &value)
 {
     std::map<EMDLabel, void *>::iterator element;
 
@@ -281,9 +292,9 @@ bool MetaDataContainer::getValue( const EMDLabel name, double &value)
     else
     {
     	if (EMDL::isDouble(element->first))
-    		value = *((double *) element->second);
+    		value = *((DOUBLE *) element->second);
     	else
-    		REPORT_ERROR("getValue for double: label " + EMDL::label2Str(element->first) + " is not of type double!");
+    		REPORT_ERROR("getValue for DOUBLE: label " + EMDL::label2Str(element->first) + " is not of type DOUBLE!");
 
     	return true;
     }
@@ -424,8 +435,8 @@ bool MetaDataContainer::writeValueToStream(std::ostream &outstream,
 #endif
 		if (EMDL::isDouble(inputLabel))
         {
-            double d;
-            d = *((double*) (getVoidPtr(inputLabel)));
+            DOUBLE d;
+            d = *((DOUBLE*) (getVoidPtr(inputLabel)));
             if ((ABS(d) > 0. && ABS(d) < 0.001) || ABS(d) > 100000.)
                 outstream << std::setw(12) << std::scientific;
             else

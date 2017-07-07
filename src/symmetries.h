@@ -134,7 +134,7 @@ class SymList
 {
 public:
     // L and R matrices
-    Matrix2D<double> __L, __R;
+    Matrix2D<DOUBLE> __L, __R;
     Matrix1D<int>    __chain_length;
 
     // As the symmetry elements form a subgroup, this is the number of
@@ -186,7 +186,7 @@ public:
                ...
            }
         @endcode */
-    void get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R) const;
+    void get_matrices(int i, Matrix2D<DOUBLE> &L, Matrix2D<DOUBLE> &R) const;
 
     /** Set a couple of matrices in the symmetry list.
         The number of matrices inside the list is given by SymsNo.
@@ -200,7 +200,7 @@ public:
                ...
            }
         @endcode */
-    void set_matrices(int i, const Matrix2D<double> &L, const Matrix2D<double> &R);
+    void set_matrices(int i, const Matrix2D<DOUBLE> &L, const Matrix2D<DOUBLE> &R);
 
     /** Read a symmetry file into a symmetry list.
         The former symmetry list is overwritten with the new one. All the
@@ -218,7 +218,7 @@ public:
 
         The chain length is the number of single matrices multiplication of
         which the inserted one is compound.*/
-    void add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
+    void add_matrices(const Matrix2D<DOUBLE> &L, const Matrix2D<DOUBLE> &R,
                       int chain_length);
 
     /** Compute subgroup for this structure.
@@ -261,12 +261,12 @@ public:
 
     /** Return the area of the non redundant part of the Ewald sphere
     */
-    double  non_redundant_ewald_sphere(int pgGroup, int pgOrder);
+    DOUBLE  non_redundant_ewald_sphere(int pgGroup, int pgOrder);
 };
 
 
 // Symmetrise a 3D map according to the specified symmetry
-void symmetriseMap(MultidimArray<double> &img, FileName &fn_sym, bool do_wrap = false);
+void symmetriseMap(MultidimArray<DOUBLE> &img, FileName &fn_sym, bool do_wrap = false);
 
 //@}
 #endif

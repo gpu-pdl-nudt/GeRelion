@@ -123,7 +123,7 @@ template <typename T> class Matrix2D;
  * the vector is (x, y) in R2.
  *
  * @code
- * MultidimArray< double > v(2);
+ * MultidimArray< DOUBLE > v(2);
  * VECTOR_R2(v, 1, 2);
  * @endcode
  */
@@ -135,7 +135,7 @@ template <typename T> class Matrix2D;
  * the vector is (x, y, z) in R3.
  *
  * @code
- * MultidimArray< double > v(3);
+ * MultidimArray< DOUBLE > v(3);
  * VECTOR_R2(v, 1, 2, 1);
  * @endcode
  */
@@ -144,7 +144,7 @@ template <typename T> class Matrix2D;
 
 /** Adding two R2 vectors (a=b+c)
  * @code
- * MultidimArray< double > a(2), b(2), c(2);
+ * MultidimArray< DOUBLE > a(2), b(2), c(2);
  * ...;
  * V2_PLUS_V2(a, b, c);
  * @endcode
@@ -155,7 +155,7 @@ template <typename T> class Matrix2D;
 
 /** Substracting two R2 vectors (a=b-c)
  * @code
- * MultidimArray< double > a(2), b(2), c(2);
+ * MultidimArray< DOUBLE > a(2), b(2), c(2);
  * ...;
  * V2_MINUS_V2(a, b, c);
  * @endcode
@@ -166,13 +166,13 @@ template <typename T> class Matrix2D;
 
 /** Adding/substracting a constant to a R2 vector (a=b-k).
  * @code
- * MultidimArray< double > a(2), b(2);
- * double k;
+ * MultidimArray< DOUBLE > a(2), b(2);
+ * DOUBLE k;
  * ...;
  * V2_PLUS_CT(a, b, k);
  *
- * MultidimArray< double > a(2), b(2);
- * double k;
+ * MultidimArray< DOUBLE > a(2), b(2);
+ * DOUBLE k;
  * ...;
  * V2_PLUS_CT(a, b, -k);
  * @endcode
@@ -183,13 +183,13 @@ template <typename T> class Matrix2D;
 
 /** Multiplying/dividing by a constant a R2 vector (a=b*k)
  * @code
- * MultidimArray< double > a(2), b(2);
- * double k;
+ * MultidimArray< DOUBLE > a(2), b(2);
+ * DOUBLE k;
  * ...;
  * V2_BY_CT(a, b, k);
  *
- * MultidimArray< double > a(2), b(2);
- * double k;
+ * MultidimArray< DOUBLE > a(2), b(2);
+ * DOUBLE k;
  * ...;
  * V2_BY_CT(a, b, 1/k);
  * @endcode
@@ -200,7 +200,7 @@ template <typename T> class Matrix2D;
 
 /** Adding two R3 vectors (a=b+c)
  * @code
- * MultidimArray< double > a(3), b(3), c(3);
+ * MultidimArray< DOUBLE > a(3), b(3), c(3);
  * ...;
  * V3_PLUS_V3(a, b, c);
  * @endcode
@@ -212,7 +212,7 @@ template <typename T> class Matrix2D;
 
 /** Substracting two R3 vectors (a=b-c)
  * @code
- * MultidimArray< double > a(3), b(3), c(3);
+ * MultidimArray< DOUBLE > a(3), b(3), c(3);
  * ...;
  * V3_MINUS_V3(a, b, c);
  * @endcode
@@ -224,13 +224,13 @@ template <typename T> class Matrix2D;
 
 /** Adding/substracting a constant to a R3 vector (a=b-k)
  * @code
- * MultidimArray< double > a(3), b(3);
- * double k;
+ * MultidimArray< DOUBLE > a(3), b(3);
+ * DOUBLE k;
  * ...;
  * V3_PLUS_CT(a, b, k);
  *
- * MultidimArray< double > a(3), b(3);
- * double k;
+ * MultidimArray< DOUBLE > a(3), b(3);
+ * DOUBLE k;
  * ...;
  * V3_PLUS_CT(a, b, -k);
  * @endcode
@@ -242,13 +242,13 @@ template <typename T> class Matrix2D;
 
 /** Multiplying/dividing by a constant a R3 vector (a=b*k)
  * @code
- * MultidimArray< double > a(3), b(3);
- * double k;
+ * MultidimArray< DOUBLE > a(3), b(3);
+ * DOUBLE k;
  * ...;
  * V3_BY_CT(a, b, k);
  *
- * MultidimArray< double > a(3), b(3);
- * double k;
+ * MultidimArray< DOUBLE > a(3), b(3);
+ * DOUBLE k;
  * ...;
  * V3_BY_CT(a, b, 1/k);
  * @endcode
@@ -289,8 +289,8 @@ public:
      * vector (by default), or a row one.
      *
      * @code
-     * Matrix1D< double > v1;
-     * Matrix1D< double > v1(true);
+     * Matrix1D< DOUBLE > v1;
+     * Matrix1D< DOUBLE > v1(true);
      * // both are examples of empty column vectors
      *
      * Matrix1D< int > v1(false);
@@ -311,8 +311,8 @@ public:
      * one.
      *
      * @code
-     * Matrix1D< double > v1(6);
-     * Matrix1D< double > v1(6, 'y');
+     * Matrix1D< DOUBLE > v1(6);
+     * Matrix1D< DOUBLE > v1(6, 'y');
      * // both are examples of column vectors of dimensions 6
      *
      * Matrix1D< int > v1('n');
@@ -332,7 +332,7 @@ public:
      * different memory assignment.
      *
      * @code
-     * Matrix1D< double > v2(v1);
+     * Matrix1D< DOUBLE > v2(v1);
      * @endcode
      */
     Matrix1D(const Matrix1D<T>& v)
@@ -567,7 +567,7 @@ public:
     /** Same value in all components.
      *
      * The constant must be of a type compatible with the array type, ie,
-     * you cannot  assign a double to an integer array without a casting.
+     * you cannot  assign a DOUBLE to an integer array without a casting.
      * It is not an error if the array is empty, then nothing is done.
      *
      * @code
@@ -1009,18 +1009,18 @@ public:
      * This function returns the sum of all internal values.
      *
      * @code
-     * double sum = m.sum();
+     * DOUBLE sum = m.sum();
      * @endcode
      */
-    double sum(bool average=false) const
+    DOUBLE sum(bool average=false) const
     {
-        double sum = 0;
+        DOUBLE sum = 0;
 		for (int j = 0; j < vdim; j++)
 		{
 			sum += vdata[j];
 		}
 		if (average)
-			return sum/(double)vdim;
+			return sum/(DOUBLE)vdim;
 		else
 			return sum;
     }
@@ -1031,12 +1031,12 @@ public:
      * power_class.
      *
      * @code
-     * double sum2 = m.sum2();
+     * DOUBLE sum2 = m.sum2();
      * @endcode
      */
-    double sum2() const
+    DOUBLE sum2() const
     {
-        double sum = 0;
+        DOUBLE sum = 0;
 		for (int j = 0; j < vdim; j++)
 		{
 			sum += vdata[j] * vdata[j];
@@ -1050,10 +1050,10 @@ public:
      * components. Euclidean norm of the vector.
      *
      * @code
-     * double mod = v.module();
+     * DOUBLE mod = v.module();
      * @endcode
      */
-    double module() const
+    DOUBLE module() const
     {
         return sqrt(sum2());
     }
@@ -1063,16 +1063,16 @@ public:
      * Supposing this vector is in R2 this function returns the angle of this
      * vector with X axis, ie, atan2(YY(v), XX(v))
      */
-    double angle()
+    DOUBLE angle()
     {
-        return atan2((double) YY(*this), (double) XX(*this));
+        return atan2((DOUBLE) YY(*this), (DOUBLE) XX(*this));
     }
 
     /** Normalize this vector, store the result here
      */
     void selfNormalize()
     {
-        double m = module();
+        DOUBLE m = module();
         if (ABS(m) > XMIPP_EQUAL_ACCURACY)
         {
             T im=(T) (1.0/m);
@@ -1100,9 +1100,9 @@ public:
      * because the numerical method is not able to correctly estimate the
      * derivative there.
      */
-    void numericalDerivative(Matrix1D<double> &result)
+    void numericalDerivative(Matrix1D<DOUBLE> &result)
     {
-         const double i12=1.0/12.0;
+         const DOUBLE i12=1.0/12.0;
          result.initZeros(*this);
          for (int i=STARTINGX(*this)+2; i<=FINISHINGX(*this)-2; i++)
         	 result(i)=i12*(-(*this)(i+2)+8*(*this)(i+1)
@@ -1117,7 +1117,7 @@ public:
         else
             ostrm << std::endl;
 
-        double max_val = ABS(v.vdata[0]);
+        DOUBLE max_val = ABS(v.vdata[0]);
 
         for (int j = 0; j < v.vdim; j++)
         {
@@ -1128,7 +1128,7 @@ public:
 
         for (int j = 0; j < v.vdim; j++)
         {
-       	 ostrm << floatToString((double) v.vdata[j], 10, prec)
+       	 ostrm << floatToString((DOUBLE) v.vdata[j], 10, prec)
        	 << std::endl;
         }
         return ostrm;
@@ -1145,22 +1145,25 @@ public:
   * After this function the vector is (x,y) in R2.
   *
   * @code
-  * Matrix1D< double > v = vectorR2(1, 2);
+  * Matrix1D< DOUBLE > v = vectorR2(1, 2);
   * @endcode
   */
- Matrix1D< double > vectorR2(double x, double y);
+ Matrix1D< DOUBLE > vectorR2(DOUBLE x, DOUBLE y);
 
  /** Creates vector in R3.
   * After this function the vector is (x,y,z) in R3.
   *
   * @code
-  * Matrix1D< double > v = vectorR2(1, 2, 1);
+  * Matrix1D< DOUBLE > v = vectorR2(1, 2, 1);
   * @endcode
   */
- Matrix1D< double > vectorR3(double x, double y, double z);
+ Matrix1D< DOUBLE > vectorR3(DOUBLE x, DOUBLE y, DOUBLE z);
 
  /** Creates an integer vector in Z3.
   */
+ #ifdef FLOAT_PRECISION
+Matrix1D< float > vectorR3(double xx, double yy, double zz);
+#endif
  Matrix1D< int > vectorR3(int x, int y, int z);
 
  /** Dot product.
@@ -1173,7 +1176,7 @@ public:
   * V1y*V2y + V1z*V2z.
   *
   * @code
-  * Matrix1D< double > v1(1000);
+  * Matrix1D< DOUBLE > v1(1000);
   * v1.init_random(0, 10, "gaussian");
   * std::cout << "The power_class of this vector should be 100 and is " <<
   *     dotProduct(v1, v1) << std::endl;
@@ -1264,7 +1267,7 @@ public:
  }
 
 /** Conversion from one type to another.
-  * If we have an integer array and we need a double one, we can use this
+  * If we have an integer array and we need a DOUBLE one, we can use this
   * function. The conversion is done through a type casting of each element
   * If n >= 0, only the nth volumes will be converted, otherwise all NSIZE volumes
   */

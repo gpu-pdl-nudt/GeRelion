@@ -1,28 +1,35 @@
-CUDA_DIR := /usr/local/cuda-7.5
+FLOAT_PRECISION := 1
+CUDA_DIR := /usr/local/cuda-8.0
 BUILD_DIR :=bin
 # CUDA architecture setting: going with all of them.
-CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
-		-gencode arch=compute_20,code=sm_21 \
-		-gencode arch=compute_30,code=sm_30 \
+CUDA_ARCH :=	-gencode arch=compute_30,code=sm_30 \
 		-gencode arch=compute_35,code=sm_35 \
 		-gencode arch=compute_37,code=sm_37 \
 		-gencode arch=compute_50,code=sm_50 \
-		-gencode arch=compute_52,code=sm_52
-		
+		-gencode arch=compute_52,code=sm_52 \
+		-gencode arch=compute_61,code=sm_61
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
 CXX = mpic++
 NVCC = $(CUDA_DIR)/bin/nvcc
-NVCCFLAGS := -ccbin $(CXX) -w
+NVCCFLAGS := -ccbin $(CXX) -w -m64
 
 CC = g++ -w
 CCDEPMODE = depmode=gcc3
+
 CFLAGS = -g -O2
+LIBS = -lpthread -ldl -lm -lX11 -lcudart -lcublas -lcurand -lcufft
+ifeq ($(FLOAT_PRECISION), 1)
+	CFLAGS += -DFLOAT_PRECISION
+	LIBS += -lfftw3f_threads -lfftw3f
+else
+	LIBS += -lfftw3_threads -lfftw3
+endif
 CPP = gcc -E -w
 CXXCPP = g++ -E -w
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -O2 -w
-LIBS = -lfftw3_threads -lfftw3 -lpthread -ldl -lm -lX11 -lcudart -lcublas -lcurand -lcufft 
+#LIBS = -lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f -lpthread -ldl -lm -lX11 -lcudart -lcublas -lcurand -lcufft 
 RELION_API_VERSION = 1.3
 RELION_SO_VERSION = 1:3:0
 
@@ -43,7 +50,7 @@ SOURCES = src/ml_optimiser.cpp src/ml_optimiser_mpi.cpp src/parallel.cpp \
 	src/backprojector.cpp src/mask.cpp src/complex.cpp src/euler.cpp \
 	src/projector.cpp src/memory.cpp src/metadata_container.cpp \
 	src/transformations.cpp src/matrix1d.cpp src/matrix2d.cpp \
-	src/image.cpp src/numerical_recipes.cpp src/ctf.cpp
+	src/image.cpp src/numerical_recipes.cpp src/ctf.cpp src/timer.cpp
 
 CU_SRCS := $(shell find src/ -name "*.cu")
 CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})

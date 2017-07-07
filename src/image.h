@@ -151,7 +151,7 @@ public:
      * An empty image is created.
      *
      * @code
-     * Image<double> I;
+     * Image<DOUBLE> I;
      * @endcode
      */
     Image()
@@ -282,7 +282,9 @@ public:
                bool isStack=false,
                int mode=WRITE_OVERWRITE)
     {
-
+      //DOUBLE aux;
+	//MDMainHeader.getValue(EMDL_ORIENT_ORIGIN_X, aux);
+	//std::cout << "The write EMDL_ORIENT_ORIGIN_X = " << aux << std::endl;
         const FileName &fname = (name == "") ? filename : name;
         fImageHandler* hFile = openFile(fname, mode);
         _write(fname, hFile, select_img, isStack, mode);
@@ -411,13 +413,13 @@ public:
             }
         case Double:
                 {
-                    if (typeid(T) == typeid(double))
+                    if (typeid(T) == typeid(DOUBLE))
                 {
                     memcpy(ptrDest, page, pageSize*sizeof(T));
                     }
                     else
                     {
-                        double * ptr = (double *) page;
+                        DOUBLE * ptr = (DOUBLE *) page;
                         for(int i=0; i<pageSize; i++)
                             ptrDest[i]=(T) ptr[i];
                     }
@@ -456,15 +458,15 @@ public:
             }
         case Double:
                 {
-                    if (typeid(T) == typeid(double))
+                    if (typeid(T) == typeid(DOUBLE))
                 {
                     memcpy(page, srcPtr, pageSize*sizeof(T));
                     }
                     else
                     {
-                        double * ptr = (double *) page;
+                        DOUBLE * ptr = (DOUBLE *) page;
                         for(int i=0; i<pageSize; i++)
-                            ptr[i] = (double)srcPtr[i];
+                            ptr[i] = (DOUBLE)srcPtr[i];
                     }
                 break;
             }
@@ -580,7 +582,7 @@ public:
             }
         case Double:
             {
-                if (typeid(T) == typeid(double))
+                if (typeid(T) == typeid(DOUBLE))
                     return 1;
                 else
                     return 0;
@@ -888,9 +890,9 @@ public:
     * std::cout << "sampling= " << samplingRateX() << std::endl;
     * @endcode
     */
-    double samplingRateX(const long int n = 0) const
+    DOUBLE samplingRateX(const long int n = 0) const
     {
-        double dummy = 1.;
+        DOUBLE dummy = 1.;
         MDMainHeader.getValue(EMDL_IMAGE_SAMPLINGRATE_X, dummy);
         return dummy;
     }
@@ -901,9 +903,9 @@ public:
     * std::cout << "sampling= " << samplingRateY() << std::endl;
     * @endcode
     */
-    double samplingRateY(const long int n = 0) const
+    DOUBLE samplingRateY(const long int n = 0) const
     {
-        double dummy = 1.;
+        DOUBLE dummy = 1.;
         MDMainHeader.getValue(EMDL_IMAGE_SAMPLINGRATE_Y, dummy);
         return dummy;
     }
@@ -920,7 +922,7 @@ public:
      */
     void setStatisticsInHeader()
     {
-    	double avg,stddev,minval,maxval;
+    	DOUBLE avg,stddev,minval,maxval;
     	data.computeStats(avg, stddev, minval, maxval);
     	MDMainHeader.setValue(EMDL_IMAGE_STATS_AVG, avg);
     	MDMainHeader.setValue(EMDL_IMAGE_STATS_STDDEV, stddev);
@@ -928,7 +930,7 @@ public:
     	MDMainHeader.setValue(EMDL_IMAGE_STATS_MAX, maxval);
     }
 
-    void setSamplingRateInHeader(double rate_x, double rate_y = -1., double rate_z = -1.)
+    void setSamplingRateInHeader(DOUBLE rate_x, DOUBLE rate_y = -1., DOUBLE rate_z = -1.)
     {
     	MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_X, rate_x);
     	if (rate_y < 0.)
@@ -1177,14 +1179,16 @@ private:
                 bool isStack=false, int mode=WRITE_OVERWRITE)
     {
         int err = 0;
-
+	 //DOUBLE aux1;
+	 //MDMainHeader.getValue(EMDL_ORIENT_ORIGIN_X, aux1);
+	 //std::cout << "The write EMDL_ORIENT_ORIGIN_X aux1 = " << aux1 << std::endl;
         FileName ext_name = hFile->ext_name;
         fimg = hFile->fimg;
         fhed = hFile->fhed;
         _exists = hFile->exist;
 
         filename = name;
-
+	
         long int aux;
         FileName filNamePlusExt(name);
         name.decompose(aux, filNamePlusExt);
@@ -1274,6 +1278,9 @@ private:
         /*
          * SELECT FORMAT
          */
+        //DOUBLE aux1;
+	//MDMainHeader.getValue(EMDL_ORIENT_ORIGIN_X, aux1);
+	//std::cout << "The write EMDL_ORIENT_ORIGIN_X aux1 = " << aux1 << std::endl;
         if(ext_name.contains("spi") || ext_name.contains("xmp") ||
            ext_name.contains("stk") || ext_name.contains("vol"))
             err = writeSPIDER(select_img,isStack,mode);
@@ -1304,21 +1311,21 @@ private:
 // Some image-specific operations
 
 // For image normalization
-void normalise(Image<double> &I, int bg_radius, double white_dust_stddev, double black_dust_stddev);
+void normalise(Image<DOUBLE> &I, int bg_radius, DOUBLE white_dust_stddev, DOUBLE black_dust_stddev);
 
-void calculateBackgroundAvgStddev(Image<double> &I, double &avg, double &stddev, int bg_radius);
+void calculateBackgroundAvgStddev(Image<DOUBLE> &I, DOUBLE &avg, DOUBLE &stddev, int bg_radius);
 
 // For dust removal
-void removeDust(Image<double> &I, bool is_white, double thresh, double avg, double stddev);
+void removeDust(Image<DOUBLE> &I, bool is_white, DOUBLE thresh, DOUBLE avg, DOUBLE stddev);
 
 // for contrast inversion
-void invert_contrast(Image<double> &I);
+void invert_contrast(Image<DOUBLE> &I);
 
 // for image re-scaling
-void rescale(Image<double> &I, int mysize);
+void rescale(Image<DOUBLE> &I, int mysize);
 
 // for image re-windowing
-void rewindow(Image<double> &I, int mysize);
+void rewindow(Image<DOUBLE> &I, int mysize);
 
 
 

@@ -55,7 +55,7 @@
 #include <fstream>
 #include <typeinfo>
 
-void fitStraightLine(std::vector<fit_point2D> &points, double &slope, double &intercept, double &corr_coeff)
+void fitStraightLine(std::vector<fit_point2D> &points, DOUBLE &slope, DOUBLE &intercept, DOUBLE &corr_coeff)
 {
 	// From: http://mathworld.wolfram.com/LeastSquaresFitting.html
 	// ss_xx = Sum_i x_i^2 - n ave_x^2
@@ -64,12 +64,12 @@ void fitStraightLine(std::vector<fit_point2D> &points, double &slope, double &in
 	// slope = xx_xy / ss_xx
 	// intercept = ave_y - slope * ave_x
 	// corr_coeff = ss_xy^2 / (ss_xx * ss_yy)
-	double ss_xy = 0.;
-	double ss_xx = 0.;
-	double ss_yy = 0.;
-	double ave_x = 0.;
-	double ave_y = 0.;
-	double sum_w = 0.;
+	DOUBLE ss_xy = 0.;
+	DOUBLE ss_xx = 0.;
+	DOUBLE ss_yy = 0.;
+	DOUBLE ave_x = 0.;
+	DOUBLE ave_y = 0.;
+	DOUBLE sum_w = 0.;
 	for (int i = 0; i < points.size(); i++)
 	{
 		ave_x += points[i].w * points[i].x;
@@ -93,9 +93,9 @@ void fitStraightLine(std::vector<fit_point2D> &points, double &slope, double &in
 }
 
 /* Value of a blob --------------------------------------------------------- */
-double kaiser_value(double r, double a, double alpha, int m)
+DOUBLE kaiser_value(DOUBLE r, DOUBLE a, DOUBLE alpha, int m)
 {
-    double rda, rdas, arg, w;
+    DOUBLE rda, rdas, arg, w;
     rda = r / a;
     rdas = rda * rda;
     if (rdas <= 1.0)
@@ -142,9 +142,9 @@ double kaiser_value(double r, double a, double alpha, int m)
 /* Value of line integral through Kaiser-Bessel radial function
    (n >=2 dimensions) at distance s from center of function.
    Parameter m = 0, 1, or 2. */
-double kaiser_proj(double s, double a, double alpha, int m)
+DOUBLE kaiser_proj(DOUBLE s, DOUBLE a, DOUBLE alpha, int m)
 {
-    double sda, sdas, w, arg, p;
+    DOUBLE sda, sdas, w, arg, p;
     sda = s / a;
     sdas = sda * sda;
     w = 1.0 - sdas;
@@ -181,9 +181,9 @@ double kaiser_proj(double s, double a, double alpha, int m)
     return p;
 }
 /* Fourier value of a blob ------------------------------------------------- */
-double kaiser_Fourier_value(double w, double a, double alpha, int m)
+DOUBLE kaiser_Fourier_value(DOUBLE w, DOUBLE a, DOUBLE alpha, int m)
 {
-    double sigma = sqrt(ABS(alpha * alpha - (2. * PI * a * w) * (2. * PI * a * w)));
+    DOUBLE sigma = sqrt(ABS(alpha * alpha - (2. * PI * a * w) * (2. * PI * a * w)));
     if (m == 2)
     {
         if (2.*PI*a*w > alpha)
@@ -206,9 +206,9 @@ double kaiser_Fourier_value(double w, double a, double alpha, int m)
     	REPORT_ERROR("m out of range in kaiser_Fourier_value()");
 }
 /* Volume integral of a blob ----------------------------------------------- */
-double  basvolume(double a, double alpha, int m, int n)
+DOUBLE  basvolume(DOUBLE a, DOUBLE alpha, int m, int n)
 {
-    double  hn, tpi, v;
+    DOUBLE  hn, tpi, v;
     hn = 0.5 * n;
     tpi = 2.0 * PI;
     if (alpha == 0.0)
@@ -225,14 +225,14 @@ double  basvolume(double a, double alpha, int m, int n)
         else                        /* n odd                                */
             v = pow(tpi / alpha, hn) * i_nph(n / 2 + m, alpha) / i_n(m, alpha);
     }
-    return v * pow(a, (double)n);
+    return v * pow(a, (DOUBLE)n);
 }
 /* Bessel function I_n (x),  n = 0, 1, 2, ...
  Use ONLY for small values of n     */
-double i_n(int n, double x)
+DOUBLE i_n(int n, DOUBLE x)
 {
     int i;
-    double i_ns1, i_n, i_np1;
+    DOUBLE i_ns1, i_n, i_np1;
     if (n == 0)   return bessi0(x);
     if (n == 1)   return bessi1(x);
     if (x == 0.0) return 0.0;
@@ -247,11 +247,11 @@ double i_n(int n, double x)
     return i_n;
 }
 /*.....Bessel function I_(n+1/2) (x),  n = 0, 1, 2, ..........................*/
-double i_nph(int n, double x)
+DOUBLE i_nph(int n, DOUBLE x)
 {
     int i;
-    double r2dpix;
-    double i_ns1, i_n, i_np1;
+    DOUBLE r2dpix;
+    DOUBLE i_ns1, i_n, i_np1;
     if (x == 0.0) return 0.0;
     r2dpix = sqrt(2.0 / (PI * x));
     i_ns1 = r2dpix * cosh(x);
@@ -265,10 +265,10 @@ double i_nph(int n, double x)
     return i_n;
 }
 /*....Limit (z->0) of (1/z)^n I_n(z)..........................................*/
-double in_zeroarg(int n)
+DOUBLE in_zeroarg(int n)
 {
     int i;
-    double fact;
+    DOUBLE fact;
     fact = 1.0;
     for (i = 1; i <= n; i++)
     {
@@ -277,10 +277,10 @@ double in_zeroarg(int n)
     return fact;
 }
 /*.......Limit (z->0) of (1/z)^(n+1/2) I_(n+1/2) (z)..........................*/
-double inph_zeroarg(int n)
+DOUBLE inph_zeroarg(int n)
 {
     int i;
-    double fact;
+    DOUBLE fact;
     fact = 1.0;
     for (i = 1; i <= n; i++)
     {
@@ -289,46 +289,46 @@ double inph_zeroarg(int n)
     return fact*sqrt(2.0 / PI);
 }
 /* Zero freq --------------------------------------------------------------- */
-double blob_freq_zero(struct blobtype b)
+DOUBLE blob_freq_zero(struct blobtype b)
 {
     return sqrt(b.alpha*b.alpha + 6.9879*6.9879) / (2*PI*b.radius);
 }
 /* Attenuation ------------------------------------------------------------- */
-double blob_att(double w, struct blobtype b)
+DOUBLE blob_att(DOUBLE w, struct blobtype b)
 {
     return blob_Fourier_val(w, b) / blob_Fourier_val(0, b);
 }
 /* Number of operations ---------------------------------------------------- */
-double blob_ops(double w, struct blobtype b)
+DOUBLE blob_ops(DOUBLE w, struct blobtype b)
 {
     return pow(b.alpha*b.alpha + 6.9879*6.9879, 1.5) / b.radius;
 }
 
 /* Gaussian value ---------------------------------------------------------- */
-double gaussian1D(double x, double sigma, double mu)
+DOUBLE gaussian1D(DOUBLE x, DOUBLE sigma, DOUBLE mu)
 {
     x -= mu;
     return 1 / sqrt(2*PI*sigma*sigma)*exp(-0.5*((x / sigma)*(x / sigma)));
 }
 
 /* t-student value -------------------------------------------------------- */
-double tstudent1D(double x, double df, double sigma, double mu)
+DOUBLE tstudent1D(DOUBLE x, DOUBLE df, DOUBLE sigma, DOUBLE mu)
 {
     x -= mu;
-    double norm = exp(gammln((df+1.)/2.)) / exp(gammln(df/2.));
+    DOUBLE norm = exp(gammln((df+1.)/2.)) / exp(gammln(df/2.));
     norm /= sqrt(df*PI*sigma*sigma);
     return norm * pow((1 + (x/sigma)*(x/sigma)/df),-((df+1.)/2.));
 
 }
 
-double gaussian2D(double x, double y, double sigmaX, double sigmaY,
-                  double ang, double muX, double muY)
+DOUBLE gaussian2D(DOUBLE x, DOUBLE y, DOUBLE sigmaX, DOUBLE sigmaY,
+                  DOUBLE ang, DOUBLE muX, DOUBLE muY)
 {
     // Express x,y in the gaussian internal coordinates
     x -= muX;
     y -= muY;
-    double xp = cos(ang) * x + sin(ang) * y;
-    double yp = -sin(ang) * x + cos(ang) * y;
+    DOUBLE xp = cos(ang) * x + sin(ang) * y;
+    DOUBLE yp = -sin(ang) * x + cos(ang) * y;
 
     // Now evaluate
     return 1 / sqrt(2*PI*sigmaX*sigmaY)*exp(-0.5*((xp / sigmaX)*(xp / sigmaX) +
@@ -336,36 +336,36 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
 }
 
 /* ICDF Gaussian ----------------------------------------------------------- */
-double icdf_gauss(double p)
+DOUBLE icdf_gauss(DOUBLE p)
 {
-    const double c[] =
+    const DOUBLE c[] =
         {
             2.515517, 0.802853, 0.010328
         };
-    const double d[] =
+    const DOUBLE d[] =
         {
             1.432788, 0.189269, 0.001308
         };
     if (p < 0.5)
     {
         // F^-1(p) = - G^-1(p)
-        double t=sqrt(-2.0*log(p));
-        double z=t - ((c[2]*t + c[1])*t + c[0]) /
+        DOUBLE t=sqrt(-2.0*log(p));
+        DOUBLE z=t - ((c[2]*t + c[1])*t + c[0]) /
                  (((d[2]*t + d[1])*t + d[0])*t + 1.0);
         return -z;
     }
     else
     {
         // F^-1(p) = G^-1(1-p)
-        double t=sqrt(-2.0*log(1-p));
-        double z=t - ((c[2]*t + c[1])*t + c[0]) /
+        DOUBLE t=sqrt(-2.0*log(1-p));
+        DOUBLE z=t - ((c[2]*t + c[1])*t + c[0]) /
                  (((d[2]*t + d[1])*t + d[0])*t + 1.0);
         return z;
     }
 }
 
 /* CDF Gaussian ------------------------------------------------------------ */
-double cdf_gauss(double x)
+DOUBLE cdf_gauss(DOUBLE x)
 {
     return 0.5 * (1. + erf(x/sqrt(2.)));
 }
@@ -411,17 +411,17 @@ arithmetic   domain     # trials      peak         rms
 Cephes Math Library Release 2.8:  June, 2000
 Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
 *************************************************************************/
-double cdf_tstudent(int k, double t)
+DOUBLE cdf_tstudent(int k, DOUBLE t)
 {
-    double EPS=5E-16;
-    double result;
-    double x;
-    double rk;
-    double z;
-    double f;
-    double tz;
-    double p;
-    double xsqk;
+    DOUBLE EPS=5E-16;
+    DOUBLE result;
+    DOUBLE x;
+    DOUBLE rk;
+    DOUBLE z;
+    DOUBLE f;
+    DOUBLE tz;
+    DOUBLE p;
+    DOUBLE xsqk;
     int j;
 
     if ( t==0 )
@@ -488,17 +488,17 @@ double cdf_tstudent(int k, double t)
 
 /* Snedecor's F ------------------------------------------------------------ */
 // http://en.wikipedia.org/wiki/F-distribution
-double cdf_FSnedecor(int d1, int d2, double x)
+DOUBLE cdf_FSnedecor(int d1, int d2, DOUBLE x)
 {
     return betai(0.5*d1,0.5*d2,(d1*x)/(d1*x+d2));
 }
 
-double icdf_FSnedecor(int d1, int d2, double p)
+DOUBLE icdf_FSnedecor(int d1, int d2, DOUBLE p)
 {
-    double xl=0, xr=1e6;
-    double pl=cdf_FSnedecor(d1,d2,xl);
-    double pr=cdf_FSnedecor(d1,d2,xr);
-    double xm, pm;
+    DOUBLE xl=0, xr=1e6;
+    DOUBLE pl=cdf_FSnedecor(d1,d2,xl);
+    DOUBLE pr=cdf_FSnedecor(d1,d2,xr);
+    DOUBLE xm, pm;
     do
     {
         xm=(xl+xr)*0.5;
@@ -565,11 +565,11 @@ float rnd_unif(float a, float b)
 }
 
 // t-distribution
-float rnd_student_t(double nu)
+float rnd_student_t(DOUBLE nu)
 {
     return tdev(nu, &idum);
 }
-float rnd_student_t(double nu, float a, float b)
+float rnd_student_t(DOUBLE nu, float a, float b)
 {
     if (b == 0)
         return a;
@@ -710,7 +710,7 @@ float rnd_log(float a, float b)
 /* Log2 -------------------------------------------------------------------- */
 // Does not work with xlc compiler
 #ifndef __xlC__
-double log2(double value)
+DOUBLE log2(DOUBLE value)
 {
     return 3.32192809488736*log10(value);
     // log10(value)/log10(2)

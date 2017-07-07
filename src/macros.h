@@ -60,6 +60,19 @@
 #define MAXFLOAT  1e30
 #endif
 
+//#define FLOAT_PRECISION
+#ifdef FLOAT_PRECISION
+#define DOUBLE float
+#define MY_MPI_DOUBLE MPI_FLOAT
+#define CUFFT_COMPLEX cufftComplex
+#define CUFFT_REAL	     cufftReal
+#else
+#define DOUBLE double
+#define MY_MPI_DOUBLE MPI_DOUBLE
+#define CUFFT_COMPLEX cufftDoubleComplex
+#define CUFFT_REAL	     cufftDoubleReal
+#endif
+
 //#define DEBUG
 //#define DEBUG_CHECKSIZES
 
@@ -81,7 +94,12 @@
  * In a comparison if two values are closer than this epsilon they are said to
  * be the same. Actually set to 1e-6
  */
+ #ifdef FLOAT_PRECISION
+#define XMIPP_EQUAL_ACCURACY 1e-4
+#else
 #define XMIPP_EQUAL_ACCURACY 1e-6
+#endif
+//#define XMIPP_EQUAL_ACCURACY 1e-6
 //@}
 
 /// @name Numerical functions
@@ -311,7 +329,7 @@
  * next_power = NEXT_POWER_OF_2(1000); // next_power = 1024
  * @endcode
  */
-#define NEXT_POWER_OF_2(x) pow(2, ceil(log((double) x) / log(2.0)-XMIPP_EQUAL_ACCURACY) )
+#define NEXT_POWER_OF_2(x) pow(2, ceil(log((DOUBLE) x) / log(2.0)-XMIPP_EQUAL_ACCURACY) )
 
 /** Linear interpolation
  *
@@ -324,7 +342,7 @@
  *
  */
 #define BSPLINE03(arg,result) {\
-	double x = ABS(arg); \
+	DOUBLE x = ABS(arg); \
 	if (x < 1.0) \
 	    result=(x * x * (x - 2.0) * (1.0 / 2.0) + 2.0 / 3.0);\
 	else if (x < 2.0) { \
@@ -354,7 +372,7 @@
  * @endcode
  */
 #define SPEED_UP_temps \
-    double spduptmp0, spduptmp1, spduptmp2, \
+    DOUBLE spduptmp0, spduptmp1, spduptmp2, \
     spduptmp3, spduptmp4, spduptmp5, \
     spduptmp6, spduptmp7, spduptmp8; \
     int   ispduptmp0, ispduptmp1, ispduptmp2, \

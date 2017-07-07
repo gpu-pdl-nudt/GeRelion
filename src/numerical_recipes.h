@@ -61,38 +61,38 @@
 void nrerror(const char error_text[]);
 
 // Random numbers ---------------------------------------------------------
-double ran1(int *idum);                                 // Uniform random
-double gasdev(int *idum);                               // Gaussian random
-double tdev(double nu, int *idum);                      // t-student random
+DOUBLE ran1(int *idum);                                 // Uniform random
+DOUBLE gasdev(int *idum);                               // Gaussian random
+DOUBLE tdev(DOUBLE nu, int *idum);                      // t-student random
 
 // Bessel functions --------------------------------------------------------
-double bessj0(double x);
-double bessj3_5(double x);
-double bessj1_5(double x);
+DOUBLE bessj0(DOUBLE x);
+DOUBLE bessj3_5(DOUBLE x);
+DOUBLE bessj1_5(DOUBLE x);
 
-double bessi0(double x);
-double bessi1(double x);
-double bessi0_5(double x);
-double bessi1_5(double x);
-double bessi2(double x);
-double bessi3(double x);
-double bessi2_5(double x);
-double bessi3_5(double x);
-double bessi4(double x);
+DOUBLE bessi0(DOUBLE x);
+DOUBLE bessi1(DOUBLE x);
+DOUBLE bessi0_5(DOUBLE x);
+DOUBLE bessi1_5(DOUBLE x);
+DOUBLE bessi2(DOUBLE x);
+DOUBLE bessi3(DOUBLE x);
+DOUBLE bessi2_5(DOUBLE x);
+DOUBLE bessi3_5(DOUBLE x);
+DOUBLE bessi4(DOUBLE x);
 
 // Special functions -------------------------------------------------------
-double gammln(double xx);
-double gammp(double a, double x);
-double betacf(double a, double b, double x);
-double betai(double a, double b, double x);
+DOUBLE gammln(DOUBLE xx);
+DOUBLE gammp(DOUBLE a, DOUBLE x);
+DOUBLE betacf(DOUBLE a, DOUBLE b, DOUBLE x);
+DOUBLE betai(DOUBLE a, DOUBLE b, DOUBLE x);
 
 // Singular value descomposition of matrix a (numerical recipes, chapter 2-6 for details)
-void svdcmp(double *a, int m, int n, double *w, double *v);
-void svbksb(double *u, double *w, double *v, int m, int n, double *b, double *x);
+void svdcmp(DOUBLE *a, int m, int n, DOUBLE *w, DOUBLE *v);
+void svbksb(DOUBLE *u, DOUBLE *w, DOUBLE *v, int m, int n, DOUBLE *b, DOUBLE *x);
 
 // Optimization ------------------------------------------------------------
-void powell(double *p, double *xi, int n, double ftol, int &iter,
-            double &fret, double(*func)(double *, void *), void *prm,
+void powell(DOUBLE *p, DOUBLE *xi, int n, DOUBLE ftol, int &iter,
+            DOUBLE &fret, DOUBLE(*func)(DOUBLE *, void *), void *prm,
             bool show);
 
 // Working with matrices ---------------------------------------------------
@@ -112,7 +112,7 @@ void ludcmp(T *a, int n, int *indx, T *d)
     {
         big = (T)0.0;
         for (j = 1;j <= n;j++)
-            if ((temp = (T)fabs((double)a[i*n+j])) > big)
+            if ((temp = (T)fabs((DOUBLE)a[i*n+j])) > big)
                 big = temp;
         if (big == (T)0.0)
             nrerror("Singular matrix in routine LUDCMP");
@@ -134,7 +134,7 @@ void ludcmp(T *a, int n, int *indx, T *d)
             for (k = 1;k < j;k++)
                 sum -= a[i*n+k] * a[k*n+j];
             a[i*n+j] = sum;
-            if ((dum = vv[i] * (T)fabs((double)sum)) >= big)
+            if ((dum = vv[i] * (T)fabs((DOUBLE)sum)) >= big)
             {
                 big = dum;
                 imax = i;
@@ -203,7 +203,7 @@ void gaussj(T *a, int n, T *b, int m)
     int *indxc, *indxr, *ipiv;
     int i, icol, irow, j, k, l, ll;
     T big, dum;
-    double pivinv;
+    DOUBLE pivinv;
 
     ask_Tvector(indxc, 1, n);
     ask_Tvector(indxr, 1, n);
@@ -219,7 +219,7 @@ void gaussj(T *a, int n, T *b, int m)
                 {
                     if (ipiv[k] == 0)
                     {
-                        if (fabs((double)a[j*n+k]) >= (double) big)
+                        if (fabs((DOUBLE)a[j*n+k]) >= (DOUBLE) big)
                         {
                             big = ABS(a[j*n+k]);
                             irow = j;

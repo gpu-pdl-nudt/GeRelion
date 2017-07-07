@@ -36,7 +36,7 @@ class BackProjector: public Projector
 {
 public:
 	// For backward projection: sum of weights
-	MultidimArray<double> weight;
+	MultidimArray<DOUBLE> weight;
 
 	// Tabulated blob values
 	TabFtBlob tab_ftblob;
@@ -56,7 +56,7 @@ public:
 	 */
 	BackProjector(int _ori_size, int _ref_dim, FileName fn_sym,
 	              int _interpolator = TRILINEAR, int _padding_factor_3d = 2, int _r_min_nn = 10,
-	              int _blob_order = 0, double _blob_radius = 1.9, double _blob_alpha = 15)
+	              int _blob_order = 0, DOUBLE _blob_radius = 1.9, DOUBLE _blob_alpha = 15)
 	{
 		// Store original dimension
 		ori_size = _ori_size;
@@ -152,8 +152,8 @@ public:
 	* Depending on the dimension of the map, this will be a backprojection or a rotation operation
 	*/
 	void set2DFourierTransform(const MultidimArray<Complex >& img_in,
-	                           const Matrix2D<double>& A, bool inv,
-	                           const MultidimArray<double>* Mweight = NULL)
+	                           const Matrix2D<DOUBLE>& A, bool inv,
+	                           const MultidimArray<DOUBLE>* Mweight = NULL)
 	{
 		// Back-rotation of a 3D Fourier Transform
 		switch (ref_dim)
@@ -174,29 +174,29 @@ public:
 	* If a exp_Mweight is given, rather than adding 1 to all relevant pixels in the weight array, we use exp_Mweight
 	*/
 	void backrotate2D(const MultidimArray<Complex >& img_in,
-	                  const Matrix2D<double>& A, bool inv,
-	                  const MultidimArray<double>* Mweight = NULL);
+	                  const Matrix2D<DOUBLE>& A, bool inv,
+	                  const MultidimArray<DOUBLE>* Mweight = NULL);
 
 	/*
 	* Set a 2D slice in the 3D map (backward projection)
 	* If a exp_Mweight is given, rather than adding 1 to all relevant pixels in the weight array, we use exp_Mweight
 	*/
 	void backproject(const MultidimArray<Complex >& img_in,
-	                 const Matrix2D<double>& A, bool inv,
-	                 const MultidimArray<double>* Mweight = NULL);
+	                 const Matrix2D<DOUBLE>& A, bool inv,
+	                 const MultidimArray<DOUBLE>* Mweight = NULL);
 
 	/*
 	 * Get only the lowest resolution components from the data and weight array
 	 * (to be joined together for two independent halves in order to force convergence in the same orientation)
 	 */
-	void getLowResDataAndWeight(MultidimArray<Complex >& lowres_data, MultidimArray<double>& lowres_weight,
+	void getLowResDataAndWeight(MultidimArray<Complex >& lowres_data, MultidimArray<DOUBLE>& lowres_weight,
 	                            int lowres_r_max);
 
 	/*
 	 * Set only the lowest resolution components from the data and weight array
 	 * (to be joined together for two independent halves in order to force convergence in the same orientation)
 	 */
-	void setLowResDataAndWeight(MultidimArray<Complex >& lowres_data, MultidimArray<double>& lowres_weight,
+	void setLowResDataAndWeight(MultidimArray<Complex >& lowres_data, MultidimArray<DOUBLE>& lowres_weight,
 	                            int lowres_r_max);
 
 	/*
@@ -211,21 +211,24 @@ public:
 	 */
 	void calculateDownSampledFourierShellCorrelation(MultidimArray<Complex >& avg1,
 	                                                 MultidimArray<Complex >& avg2,
-	                                                 MultidimArray<double>& fsc);
+	                                                 MultidimArray<DOUBLE>& fsc);
+	void calculateDownSampledFourierShellCorrelation_fsc(MultidimArray<Complex > &avg1,
 
+        MultidimArray<Complex > &avg2,
+        MultidimArray<Complex > &mask_fsc,                                                                                                                              MultidimArray<DOUBLE> &fsc);
 	/* Get the 3D reconstruction
 	     * If do_map is true, 1 will be added to all weights
 	     * alpha will contain the noise-reduction spectrum
 	*/
-	void reconstruct(MultidimArray<double>& vol_out,
+	void reconstruct(MultidimArray<DOUBLE>& vol_out,
 	                 int max_iter_preweight,
 	                 bool do_map,
-	                 double tau2_fudge,
-	                 MultidimArray<double>& tau2,
-	                 MultidimArray<double>& sigma2,
-	                 MultidimArray<double>& evidence_vs_prior,
-	                 MultidimArray<double> fsc,
-	                 double normalise = 1.,
+	                 DOUBLE tau2_fudge,
+	                 MultidimArray<DOUBLE>& tau2,
+	                 MultidimArray<DOUBLE>& sigma2,
+	                 MultidimArray<DOUBLE>& evidence_vs_prior,
+	                 MultidimArray<DOUBLE> fsc,
+	                 DOUBLE normalise = 1.,
 	                 bool update_tau2_with_fsc = false,
 	                 bool is_whole_instead_of_half = false,
 	                 int nr_threads = 1,
@@ -236,12 +239,12 @@ public:
 	* Repairing it here gives like a 2-fold averaging correction for interpolation errors...
 	*/
 	void enforceHermitianSymmetry(MultidimArray<Complex >& mydata,
-	                              MultidimArray<double>& myweight);
+	                              MultidimArray<DOUBLE>& myweight);
 
 	/* Applies the symmetry from the SymList object to the weight and the data array
 	 */
 	void symmetrise(MultidimArray<Complex >& mydata,
-	                MultidimArray<double>& myweight, int my_rmax2);
+	                MultidimArray<DOUBLE>& myweight, int my_rmax2);
 
 	/* Convolute in Fourier-space with the blob by multiplication in real-space
 	 * Note the convlution is done on the complex array inside the transformer object!!
@@ -251,7 +254,7 @@ public:
 	/* Calculate the inverse FFT of Fin and windows the result to ori_size
 	 * Also pass the transformer, to prevent making and clearing a new one before clearing the one in reconstruct()
 	 */
-	void windowToOridimRealSpace(FourierTransformer& transformer, MultidimArray<Complex >& Fin, MultidimArray<double>& Mout, int nr_threads = 1);
+	void windowToOridimRealSpace(FourierTransformer& transformer, MultidimArray<Complex >& Fin, MultidimArray<DOUBLE>& Mout, int nr_threads = 1);
 
 	/*
 	* Go from the Projector-centered fourier transform back to FFTW-uncentered one
@@ -271,23 +274,38 @@ public:
 			}
 		}
 	}
+#ifdef FLOAT_PRECISION
+   // Fnewweight needs decentering, but has to be in double-precision for correct calculations!
+   template <typename T>
+   void decenter(MultidimArray<T> &Min, MultidimArray<double> &Mout, int my_rmax2)
+   {
 
-	void reconstruct_gpu(MultidimArray<double>& vol_out,
+	   // Mout should already have the right size
+	   // Initialize to zero
+	   Mout.initZeros();
+	   FOR_ALL_ELEMENTS_IN_FFTW_TRANSFORM(Mout)
+	   {
+		   if (kp*kp + ip*ip + jp*jp <= my_rmax2)
+                       DIRECT_A3D_ELEM(Mout, k, i, j) = (double)A3D_ELEM(Min, kp, ip, jp);
+	   }
+   }
+#endif
+	void reconstruct_gpu(MultidimArray<DOUBLE>& vol_out,
 	                     int max_iter_preweight,
 	                     bool do_map,
-	                     double tau2_fudge,
-	                     MultidimArray<double>& tau2,
-	                     MultidimArray<double>& sigma2,
-	                     MultidimArray<double>& data_vs_prior,
-	                     MultidimArray<double> fsc, // only input
-	                     double normalise,
+	                     DOUBLE tau2_fudge,
+	                     MultidimArray<DOUBLE>& tau2,
+	                     MultidimArray<DOUBLE>& sigma2,
+	                     MultidimArray<DOUBLE>& data_vs_prior,
+	                     MultidimArray<DOUBLE> fsc, // only input
+	                     DOUBLE normalise,
 	                     bool update_tau2_with_fsc,
 	                     bool is_whole_instead_of_half,
 	                     int nr_threads,
 	                     int minres_map);
 
-	void symmetrise_gpu(cufftDoubleComplex* my_data_D,
-	                    double* my_weight_D,
+	void symmetrise_gpu(CUFFT_COMPLEX * my_data_D,
+	                    DOUBLE* my_weight_D,
 	                    int xdim,
 	                    int ydim,
 	                    int xydim,
@@ -298,8 +316,8 @@ public:
 	                    int my_rmax2
 	                   );
 
-	void decenter_gpu(double* weight_D,
-	                  double* Fweight_D,
+	void decenter_gpu(DOUBLE* weight_D,
+	                  DOUBLE* Fweight_D,
 	                  int max_r2,
 	                  int xdim,
 	                  int ydim,
@@ -310,30 +328,30 @@ public:
 	                  int start_y,
 	                  int start_z);
 
-	void decenter_gpu(cufftDoubleComplex* data_D,
-	                  cufftDoubleComplex* Fconv_D,
-	                  double* Fnewweight_D,
-	                  int max_r2,
-	                  int xdim,
-	                  int ydim,
-	                  int zdim,
-	                  int xdim_weight,
-	                  int ydim_weight,
-	                  int start_x,
-	                  int start_y,
-	                  int start_z);
+	void decenter_gpu(CUFFT_COMPLEX * data_D,
+                                 CUFFT_COMPLEX * Fconv_D,
+                                 double* Fnewweight_D,
+                                 int max_r2,
+                                 int xdim,
+                                 int ydim,
+                                 int zdim,
+                                 int xdim_weight,
+                                 int ydim_weight,
+                                 int start_x,
+                                 int start_y,
+                                 int start_z);
 
-	void convoluteBlobRealSpace_gpu(FourierTransformer& transformer, double* Mconv_D, double* tabulatedValues_D, bool do_mask = false);
+	void convoluteBlobRealSpace_gpu(FourierTransformer& transformer, DOUBLE* Mconv_D, DOUBLE* tabulatedValues_D, bool do_mask = false);
 
 
-	void enforceHermitianSymmetry_gpu(cufftDoubleComplex* my_data_D,
-	                                  double* my_weight_D,
+	void enforceHermitianSymmetry_gpu(CUFFT_COMPLEX * my_data_D,
+	                                  DOUBLE* my_weight_D,
 	                                  int xdim,
 	                                  int ydim,
 	                                  int xydim,
 	                                  int zdim);
 	void windowToOridimRealSpace_gpu(FourierTransformer& transformer,
-	                                 cufftDoubleComplex* Fin_D, double* Mout_D,
+	                                 CUFFT_COMPLEX * Fin_D, DOUBLE* Mout_D,
 	                                 int new_xdim,
 	                                 int new_ydim,
 	                                 int new_zdim);

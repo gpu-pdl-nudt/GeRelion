@@ -378,10 +378,10 @@ public:
 	MetaDataTable getMetaDataMicrograph(long int part_id, int inseries_no);
 
 	// Get the micrograph transformation matrix for this particle
-	Matrix2D<double> getMicrographTransformationMatrix(long int mic_id);
+	Matrix2D<DOUBLE> getMicrographTransformationMatrix(long int mic_id);
 
 	// Get the micrograph transformation matrix for this particle & iseries_no
-	Matrix2D<double> getMicrographTransformationMatrix(long int part_id, int inseries_no);
+	Matrix2D<DOUBLE> getMicrographTransformationMatrix(long int part_id, int inseries_no);
 
 	// Add an image
 	long int addImage(long int group_id, long int micrograph_id, long int particle_id);

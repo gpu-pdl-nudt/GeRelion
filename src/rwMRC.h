@@ -233,18 +233,18 @@ int readMRC(long int img_select, bool isStack=false)
     }
     offset = MRCSIZE + header->nsymbt;
 
-    MDMainHeader.setValue(EMDL_IMAGE_STATS_MIN,(double)header->amin);
-    MDMainHeader.setValue(EMDL_IMAGE_STATS_MAX,(double)header->amax);
-    MDMainHeader.setValue(EMDL_IMAGE_STATS_AVG,(double)header->amean);
-    MDMainHeader.setValue(EMDL_IMAGE_STATS_STDDEV,(double)header->arms);
+    MDMainHeader.setValue(EMDL_IMAGE_STATS_MIN,(DOUBLE)header->amin);
+    MDMainHeader.setValue(EMDL_IMAGE_STATS_MAX,(DOUBLE)header->amax);
+    MDMainHeader.setValue(EMDL_IMAGE_STATS_AVG,(DOUBLE)header->amean);
+    MDMainHeader.setValue(EMDL_IMAGE_STATS_STDDEV,(DOUBLE)header->arms);
     MDMainHeader.setValue(EMDL_IMAGE_DATATYPE,(int)datatype);
 
     if ( header->mx && header->a!=0)//ux
-        MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_X,(double)header->a/header->mx);
+        MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_X,(DOUBLE)header->a/header->mx);
     if ( header->my && header->b!=0)//yx
-        MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_Y,(double)header->b/header->my);
+        MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_Y,(DOUBLE)header->b/header->my);
     if ( header->mz && header->c!=0)//zx
-        MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_Z,(double)header->c/header->mz);
+        MDMainHeader.setValue(EMDL_IMAGE_SAMPLINGRATE_Z,(DOUBLE)header->c/header->mz);
 
    if (isStack && dataflag<0)   // Don't read the individual header and the data if not necessary
    {
@@ -320,7 +320,7 @@ int writeMRC(long int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     	header->nz = Zdim;
 
     // Convert T to datatype
-    if ( typeid(T) == typeid(double) ||
+    if ( typeid(T) == typeid(DOUBLE) ||
          typeid(T) == typeid(float) ||
          typeid(T) == typeid(int) )
         header->mode = 2;
@@ -337,7 +337,7 @@ int writeMRC(long int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     header->mapc = 1;
     header->mapr = 2;
     header->maps = 3;
-    double aux,aux2;
+    DOUBLE aux,aux2;
 
     // TODO: fix this!
     header->a = (float)0.;// ua;
@@ -371,13 +371,13 @@ int writeMRC(long int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
         if(MDMainHeader.getValue(EMDL_ORIENT_ORIGIN_X, aux))
             header->nxStart = (int)(aux-0.5);
-
+	 //std::cout <<" get EMDL_ORIENT_ORIGIN_X = " <<aux << std::endl;
         if (MDMainHeader.getValue(EMDL_IMAGE_SAMPLINGRATE_X,aux2))//header is init to zero
         {
         	header->xOrigin = (float)(aux*aux2);
         	header->a = (float)aux2*header->nx;
         }
-
+	// std::cout <<" xOrigin = " << header->xOrigin << "  a = " << (aux2*header->nx)  << "  aux= " << aux << "  aux2= " << aux2 << std::endl;
         if (MDMainHeader.getValue(EMDL_ORIENT_ORIGIN_Y, aux))
             header->nyStart = (int)(aux-0.5);
 
@@ -386,8 +386,8 @@ int writeMRC(long int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
          	header->yOrigin = (float)(aux*aux2);
          	header->b = (float)aux2*header->ny;
         }
-
-        if (MDMainHeader.getValue(EMDL_ORIENT_ORIGIN_Z, aux))
+	 //std::cout <<" yOrigin = " << header->yOrigin << "  b = " << (aux2*header->ny)  << "  aux= " << aux << "  aux2= " << aux2 << std::endl;
+       if (MDMainHeader.getValue(EMDL_ORIENT_ORIGIN_Z, aux))
             header->nzStart = (int)(aux-0.5);
 
         if (MDMainHeader.getValue(EMDL_IMAGE_SAMPLINGRATE_Z,aux2))//header is init to zero
@@ -395,7 +395,8 @@ int writeMRC(long int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         	header->zOrigin = (float)(aux*aux2);
         	header->c = (float)aux2*header->nz;
         }
-
+	// std::cout <<" zOrigin = " << header->zOrigin << "  c = " << (aux2*header->nz)  << "  aux= " << aux << "  aux2= " << aux2 << std::endl;
+     
     }
 
     header->nsymbt = 0;

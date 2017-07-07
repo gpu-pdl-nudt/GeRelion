@@ -67,14 +67,14 @@
 struct fit_point2D
 {
 	/// x coordinate
-	double x;
+	DOUBLE x;
 	/// y coordinate (assumed to be a function of x)
-	double y;
+	DOUBLE y;
 	/// Weight of the point in the Least-Squares problem
-	double w;
+	DOUBLE w;
 };
 
-void fitStraightLine(std::vector<fit_point2D>& points, double& slope, double& intercept, double& corr_coeff);
+void fitStraightLine(std::vector<fit_point2D>& points, DOUBLE& slope, DOUBLE& intercept, DOUBLE& corr_coeff);
 
 /* ========================================================================= */
 /* BLOBS                                                                     */
@@ -113,8 +113,8 @@ void fitStraightLine(std::vector<fit_point2D>& points, double& slope, double& in
          blob.order  = 2;                       // Order of the Bessel function
          blob.alpha  = textToFloat(argv[1]);    // Smoothness parameter
 
-         double M=blob_Fourier_val (0, blob);
-         for (double w=0; w<=2; w += 0.05)
+         DOUBLE M=blob_Fourier_val (0, blob);
+         for (DOUBLE w=0; w<=2; w += 0.05)
             std::cout << w << " " <<  blob_Fourier_val (w, blob)/M << std::endl;
          return 0;
       }
@@ -123,13 +123,13 @@ void fitStraightLine(std::vector<fit_point2D>& points, double& slope, double& in
 struct blobtype
 {
 	/// Spatial radius in Universal System units
-	double radius;
+	DOUBLE radius;
 
 	/// Derivation order and Bessel function order
 	int   order;
 
 	/// Smoothness parameter
-	double alpha;
+	DOUBLE alpha;
 };
 
 // Blob value --------------------------------------------------------------
@@ -144,13 +144,13 @@ struct blobtype
     \\ Ex:
     @code
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
-    Matrix1D<double> v=vectorR3(1,1,1);
+    Matrix1D<DOUBLE> v=vectorR3(1,1,1);
     std::cout << "Blob value at (1,1,1) = " << blob_val(v.mod(),blob) << std::endl;
     @endcode */
 #define blob_val(r, blob) kaiser_value(r, blob.radius, blob.alpha, blob.order)
 
 /** Function actually computing the blob value. */
-double kaiser_value(double r, double a, double alpha, int m);
+DOUBLE kaiser_value(DOUBLE r, DOUBLE a, DOUBLE alpha, int m);
 
 // Blob projection ---------------------------------------------------------
 /** Blob projection.
@@ -165,14 +165,14 @@ double kaiser_value(double r, double a, double alpha, int m);
     \\ Ex:
     @code
     struct blobtype blob; blob.radius = 2; blob.order = 2; blob.alpha = 3.6;
-    Matrix1D<double> v=vectorR3(1,1,1);
+    Matrix1D<DOUBLE> v=vectorR3(1,1,1);
     std::cout << "Blob line integral through (1,1,1) = " << blob_proj(v.mod(),blob)
          << std::endl;
     @endcode */
 #define blob_proj(r, blob) kaiser_proj(r, blob.radius, blob.alpha, blob.order)
 
 /** Function actually computing the blob projection. */
-double kaiser_proj(double r, double a, double alpha, int m);
+DOUBLE kaiser_proj(DOUBLE r, DOUBLE a, DOUBLE alpha, int m);
 
 /** Fourier transform of a blob.
     This function returns the value of the Fourier transform of the blob
@@ -186,56 +186,56 @@ double kaiser_proj(double r, double a, double alpha, int m);
 	kaiser_Fourier_value(w, blob.radius, blob.alpha, blob.order)
 
 /** Function actually computing the blob Fourier transform. */
-double kaiser_Fourier_value(double w, double a, double alpha, int m);
+DOUBLE kaiser_Fourier_value(DOUBLE w, DOUBLE a, DOUBLE alpha, int m);
 
 /** Formula for a volume integral of a blob (n is the blob dimension) */
 #define blob_mass(blob) \
 	basvolume(blob.radius, blob.alpha, blob.order,3)
 
 /** Function actually computing the blob integral */
-double  basvolume(double a, double alpha, int m, int n);
+DOUBLE  basvolume(DOUBLE a, DOUBLE alpha, int m, int n);
 
 /** Limit (z->0) of (1/z)^n I_n(z) (needed by basvolume)*/
-double in_zeroarg(int n);
+DOUBLE in_zeroarg(int n);
 
 /** Limit (z->0) of (1/z)^(n+1/2) I_(n+1/2) (z) (needed by basvolume)*/
-double inph_zeroarg(int n);
+DOUBLE inph_zeroarg(int n);
 
 /** Bessel function I_(n+1/2) (x),  n = 0, 1, 2, ... */
-double i_nph(int n, double x);
+DOUBLE i_nph(int n, DOUBLE x);
 
 /** Bessel function I_n (x),  n = 0, 1, 2, ...
  Use ONLY for small values of n */
-double i_n(int n, double x);
+DOUBLE i_n(int n, DOUBLE x);
 
 /** Blob pole.
     This is the normalized frequency at which the blob goes to 0. */
-double blob_freq_zero(struct blobtype b);
+DOUBLE blob_freq_zero(struct blobtype b);
 
 /** Attenuation of a blob.
     The Fourier transform of the blob at w is the Fourier transform at w=0
     multiplied by the attenuation. This is the value returned. Remind that
     the frequency must be normalized by the sampling rate. Ie, Tm*w(cont) */
-double blob_att(double w, struct blobtype b);
+DOUBLE blob_att(DOUBLE w, struct blobtype b);
 
 /** Number of operations for a blob.
     This is a number proportional to the number of operations that ART
     would need to make a reconstruction with this blob. */
-double blob_ops(double w, struct blobtype b);
+DOUBLE blob_ops(DOUBLE w, struct blobtype b);
 
 /** 1D gaussian value
  *
  * This function returns the value of a univariate gaussian function at the
  * point x.
  */
-double gaussian1D(double x, double sigma, double mu = 0);
+DOUBLE gaussian1D(DOUBLE x, DOUBLE sigma, DOUBLE mu = 0);
 
 /** 1D t-student value
  *
  * This function returns the value of a univariate t-student function at the
  * point x, and with df degrees of freedom
  */
-double tstudent1D(double x, double df, double sigma, double mu = 0);
+DOUBLE tstudent1D(DOUBLE x, DOUBLE df, DOUBLE sigma, DOUBLE mu = 0);
 
 /** Inverse Cumulative distribution function for a Gaussian
  *
@@ -244,14 +244,14 @@ double tstudent1D(double x, double df, double sigma, double mu = 0);
  * The function employs an fast approximation to z which is valid up to 1e-4.
  * See http://www.johndcook.com/normal_cdf_inverse.html
  */
-double icdf_gauss(double p);
+DOUBLE icdf_gauss(DOUBLE p);
 
 /** Cumulative distribution function for a Gaussian
  *
  * This function returns the value of the CDF of a univariate gaussian function at the
  * point x.
  */
-double cdf_gauss(double x);
+DOUBLE cdf_gauss(DOUBLE x);
 
 /** Cumulative distribution function for a t-distribution
  *
@@ -259,7 +259,7 @@ double cdf_gauss(double x);
  * with k degrees of freedom  at the point t.
  *  Adapted by Sjors from: http://www.alglib.net/specialfunctions/distributions/student.php
  */
-double cdf_tstudent(int k, double t);
+DOUBLE cdf_tstudent(int k, DOUBLE t);
 
 /** Cumulative distribution function for a Snedecor's F-distribution.
  *
@@ -267,7 +267,7 @@ double cdf_tstudent(int k, double t);
  * F-distribution
  * with d1, d2 degrees of freedom  at the point x.
  */
-double cdf_FSnedecor(int d1, int d2, double x);
+DOUBLE cdf_FSnedecor(int d1, int d2, DOUBLE x);
 
 /** Inverse Cumulative distribution function for a Snedecor's F-distribution.
  *
@@ -276,7 +276,7 @@ double cdf_FSnedecor(int d1, int d2, double x);
  * with d1, d2 degrees of freedom with probability p, i.e., it returns
  * x such that CDF(d1,d2,x)=p
  */
-double icdf_FSnedecor(int d1, int d2, double p);
+DOUBLE icdf_FSnedecor(int d1, int d2, DOUBLE p);
 
 /** 2D gaussian value
  *
@@ -285,13 +285,13 @@ double icdf_FSnedecor(int d1, int d2, double p);
  * (counter-clockwise) radians (the angle is positive when measured from the
  * universal X to the gaussian X). X and Y are supposed to be independent.
  */
-double gaussian2D(double x,
-                  double y,
-                  double sigmaX,
-                  double sigmaY,
-                  double ang,
-                  double muX = 0,
-                  double muY = 0);
+DOUBLE gaussian2D(DOUBLE x,
+                  DOUBLE y,
+                  DOUBLE sigmaX,
+                  DOUBLE sigmaY,
+                  DOUBLE ang,
+                  DOUBLE muX = 0,
+                  DOUBLE muY = 0);
 //@}
 
 /** Compute the logarithm in base 2
@@ -299,7 +299,7 @@ double gaussian2D(double x,
 // Does not work with xlc compiler
 /*
 #ifndef __xlC__
-double log2(double value);
+DOUBLE log2(DOUBLE value);
 #endif*/
 //@}
 
@@ -369,7 +369,7 @@ float rnd_unif(float a, float b);
  * << std::endl;
  * @endcode
  */
-float rnd_student_t(double nu);
+float rnd_student_t(DOUBLE nu);
 
 /** Produce a gaussian random number with mean a and standard deviation b and nu degrees of freedom
  *
@@ -378,7 +378,7 @@ float rnd_student_t(double nu);
  * << std::endl;
  * @endcode
  */
-float rnd_student_t(double nu, float a, float b);
+float rnd_student_t(DOUBLE nu, float a, float b);
 
 /** Produce a gaussian random number with mean 0 and standard deviation 1
  *

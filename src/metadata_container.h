@@ -55,8 +55,8 @@
 #include "src/metadata_label.h"
 
 //useful to init values to zero
-//static double zeroD=0.;
-//static double    oneD=1.;
+//static DOUBLE zeroD=0.;
+//static DOUBLE    oneD=1.;
 //static bool  falseb=false;
 
 class MetaDataContainer
@@ -90,7 +90,10 @@ public:
     void addValue(const std::string &name, const std::string &value);
 
     /** Creates a new label-value pair, and checks the type of the label is the same as that of value */
+#ifdef FLOAT_PRECISION
     void addValue(EMDLabel name, const double &value);
+#endif
+    void addValue(EMDLabel name, const DOUBLE &value);
     void addValue(EMDLabel name, const int &value);
     void addValue(EMDLabel name, const long int &value);
     void addValue(EMDLabel name, const bool &value);
@@ -109,7 +112,7 @@ public:
              it != values.end(); ++it)
         {
         	if (EMDL::isDouble(it->first))
-                delete (double*)it->second;
+                delete (DOUBLE*)it->second;
             else if (EMDL::isInt(it->first))
                 delete (int*)it->second;
             else if (EMDL::isLong(it->first))
@@ -131,7 +134,7 @@ public:
      *  If the name does not exist in the container, the function returns false
      *
      */
-    bool getValue( const EMDLabel name, double &value);
+    bool getValue( const EMDLabel name, DOUBLE &value);
     bool getValue( const EMDLabel name, int &value);
     bool getValue( const EMDLabel name, long int &value);
     bool getValue( const EMDLabel name, bool &value);

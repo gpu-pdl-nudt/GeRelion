@@ -41,14 +41,14 @@ public:
     Healpix_Base healpix_base;
 
     /** Random perturbation */
-    double random_perturbation;
+    DOUBLE random_perturbation;
 
     /** Amount of random perturbation */
-    double perturbation_factor;
+    DOUBLE perturbation_factor;
 
     /** In-plane (psi-angle) sampling rate
      */
-    double psi_step;
+    DOUBLE psi_step;
 
     /** Healpix order */
     int healpix_order;
@@ -61,7 +61,7 @@ public:
 
     /* Translational search range and sampling rate
      */
-    double offset_range, offset_step;
+    DOUBLE offset_range, offset_step;
 
     /** Flag whether this is a real 3D sampling */
     bool is_3D;
@@ -73,26 +73,26 @@ public:
     FileName fn_sym;
 
     /** List of symmetry operators */
-    std::vector <Matrix2D<double> > R_repository, L_repository;
+    std::vector <Matrix2D<DOUBLE> > R_repository, L_repository;
 
     /** Two numbers that describe the symmetry group */
     int pgGroup;
     int pgOrder;
 
     /** Limited tilt angle range */
-    double limit_tilt;
+    DOUBLE limit_tilt;
 
     /** vector with the original pixel number in the healpix object */
     std::vector<int> directions_ipix;
 
     /** vector with sampling points described by angles */
-    std::vector<Matrix1D<double> > directions_angles;
+    std::vector<Matrix1D<DOUBLE> > directions_angles;
 
     /** vector with the psi-samples */
-    std::vector<double> psi_angles;
+    std::vector<DOUBLE> psi_angles;
 
     /** vector with the X,Y(,Z)-translations */
-    std::vector<Matrix1D<double> > translations;
+    std::vector<Matrix1D<DOUBLE> > translations;
 
     /** vector with pointers to the (rot,tilt) pairs (directions) that have non-zero prior probability */
     std::vector<int> pointer_dir_nonzeroprior;
@@ -103,10 +103,10 @@ public:
 //TMP DEBUGGING: normally protected!
 public:
     /** vector with the prior probabilities for those directions that have non-zero prior probability*/
-    std::vector<double> directions_prior;
+    std::vector<DOUBLE> directions_prior;
 
     /** vector with the prior probabilities for those psi-angles that have non-zero prior probability*/
-    std::vector<double> psi_prior;
+    std::vector<DOUBLE> psi_prior;
 
 
 
@@ -173,36 +173,36 @@ public:
     void write(FileName fn_out);
 
     /* Set the non-oversampled list of translations */
-    void setTranslations(double offset_step = -1., double offset_range = -1.);
+    void setTranslations(DOUBLE offset_step = -1., DOUBLE offset_range = -1.);
 
     /* Set only a single translation */
-    void setOneTranslation(Matrix1D<double> offset);
+    void setOneTranslation(Matrix1D<DOUBLE> offset);
 
     /* Set the non-oversampled lists of directions and in-plane rotations */
-    void setOrientations(int _order = -1, double _psi_step = -1.);
+    void setOrientations(int _order = -1, DOUBLE _psi_step = -1.);
 
     /* Set only a single orientation */
-    void setOneOrientation(double rot, double tilt, double psi);
+    void setOneOrientation(DOUBLE rot, DOUBLE tilt, DOUBLE psi);
 
 
     /* Write all orientations as a sphere in a bild file
      * Mainly useful for debugging */
-    void writeAllOrientationsToBild(FileName fn_bild, std::string rgb = "1 0 0", double size = 0.025);
-    void writeNonZeroPriorOrientationsToBild(FileName fn_bild, double rot_prior, double tilt_prior, std::string rgb = "0 0 1", double size = 0.025);
+    void writeAllOrientationsToBild(FileName fn_bild, std::string rgb = "1 0 0", DOUBLE size = 0.025);
+    void writeNonZeroPriorOrientationsToBild(FileName fn_bild, DOUBLE rot_prior, DOUBLE tilt_prior, std::string rgb = "0 0 1", DOUBLE size = 0.025);
 
     /* Select all orientations with zero prior probabilities
      * store all these in the vectors pointer_dir_nonzeroprior and pointer_psi_nonzeroprior
      * Also precalculate their prior probabilities and store in directions_prior and psi_prior
      */
     void selectOrientationsWithNonZeroPriorProbability(
-    		double prior_rot, double prior_tilt, double prior_psi,
-    		double sigma_rot, double sigma_tilt, double sigma_psi,
-    		double sigma_cutoff = 3.);
+    		DOUBLE prior_rot, DOUBLE prior_tilt, DOUBLE prior_psi,
+    		DOUBLE sigma_rot, DOUBLE sigma_tilt, DOUBLE sigma_psi,
+    		DOUBLE sigma_cutoff = 3.);
 
     /* Randomly reject part of te non-zero prior probabilities, so that the optimization no longer follows the steepest downward gradient
      * This procedure was inspired by Hans Elmlund's PRIME algorithm.
      */
-    void randomSelectionNonZeroPriorProbability(double fraction_to_keep);
+    void randomSelectionNonZeroPriorProbability(DOUBLE fraction_to_keep);
 
 
     /** Get the symmetry group of this sampling object
@@ -217,19 +217,19 @@ public:
 
     /** The geometrical considerations about the symmetry below require that rot = [-180,180] and tilt [0,180]
      */
-    void checkDirection(double &rot, double &tilt);
+    void checkDirection(DOUBLE &rot, DOUBLE &tilt);
 
     /* Get the rot and tilt angles in the center of the ipix'th HEALPix sampling pixel
      * This involves calculations in the HEALPix library
      */
-    void getDirectionFromHealPix(long int ipix, double &rot, double &tilt);
+    void getDirectionFromHealPix(long int ipix, DOUBLE &rot, DOUBLE &tilt);
 
     /* Get the translational sampling step in pixels */
-    double getTranslationalSampling(int adaptive_oversampling = 0);
+    DOUBLE getTranslationalSampling(int adaptive_oversampling = 0);
 
     /* Get approximate angular sampling in degrees for any adaptive oversampling
      */
-    double getAngularSampling(int adaptive_oversampling = 0);
+    DOUBLE getAngularSampling(int adaptive_oversampling = 0);
 
     /* Get the number of symmetry-unique sampling points
      * Note that because of symmetry-equivalence removal this number is not the number of original HEALPix pixels
@@ -259,15 +259,15 @@ public:
      * This does not involve calculations in the HEALPix library
      * Note that because of symmetry-equivalence removal idir no longer corresponds to the HEALPix pixel number
      */
-    void getDirection(long int idir, double &rot, double &tilt);
+    void getDirection(long int idir, DOUBLE &rot, DOUBLE &tilt);
 
     /* Get the value for the ipsi'th precalculated psi angle
      */
-    void getPsiAngle(long int ipsi, double &psi);
+    void getPsiAngle(long int ipsi, DOUBLE &psi);
 
     /* Get the value for the itrans'th precalculated translations
      */
-    void getTranslation(long int itrans, Matrix1D<double> &trans);
+    void getTranslation(long int itrans, Matrix1D<DOUBLE> &trans);
 
     /* Get the position of this sampling point in the original array */
     long int getPositionSamplingPoint(int iclass, long int idir, long int ipsi, long int itrans);
@@ -283,7 +283,7 @@ public:
      * etc.
      */
     void getTranslations(long int itrans, int oversampling_order,
-								    std::vector<Matrix1D<double> > &my_translations);
+								    std::vector<Matrix1D<DOUBLE> > &my_translations);
 
     /* Get the vectors of (rot, tilt, psi) angle triplets for a more finely (oversampled) sampling
      * The oversampling_order is the difference in order of the original (coarse) and the oversampled (fine) sampling
@@ -295,11 +295,11 @@ public:
      * If only_nonzero_prior is true, then only the orientations with non-zero prior probabilities will be returned
      * This is for local angular searches
      */
-    void getOrientations(long int idir, long int ipsi, int oversampling_order, std::vector<Matrix1D<double> > &my_orientations);
+    void getOrientations(long int idir, long int ipsi, int oversampling_order, std::vector<Matrix1D<DOUBLE> > &my_orientations);
 
     /** Get the prior probability for this orientation
      */
-    double getPriorProbability(long int idir, long int ipsi);
+    DOUBLE getPriorProbability(long int idir, long int ipsi);
 
     /** Get the number of the original direction from the ones with also non-zero prior probability
      */
@@ -318,19 +318,19 @@ public:
      * etc.
      */
     void pushbackOversampledPsiAngles(long int ipsi, int oversampling_order,
-    		double rot, double tilt, std::vector<Matrix1D<double> > &oversampled_orientations);
+    		DOUBLE rot, DOUBLE tilt, std::vector<Matrix1D<DOUBLE> > &oversampled_orientations);
 
     /* Calculate an angular distance between two sets of Euler angles */
-    double calculateAngularDistance(double rot1, double tilt1, double psi1,
-    		double rot2, double tilt2, double psi2);
+    DOUBLE calculateAngularDistance(DOUBLE rot1, DOUBLE tilt1, DOUBLE psi1,
+    		DOUBLE rot2, DOUBLE tilt2, DOUBLE psi2);
 
     /* Write a BILD file describing the angular distribution
      *  R determines the radius of the sphere on which cylinders will be placed
      *  Rmax_frac determines the length of the longest cylinder (relative to R, 0.2 + +20%)
      *  width_frac determines how broad each cylinder is. frac=1 means they touch each other
      * */
-    void writeBildFileOrientationalDistribution(MultidimArray<double> &pdf_direction,
-    		FileName &fn_bild, double R, double offset = 0., double Rmax_frac = 0.3, double width_frac = 0.5);
+    void writeBildFileOrientationalDistribution(MultidimArray<DOUBLE> &pdf_direction,
+    		FileName &fn_bild, DOUBLE R, DOUBLE offset = 0., DOUBLE Rmax_frac = 0.3, DOUBLE width_frac = 0.5);
 
 private:
 
@@ -348,12 +348,12 @@ private:
         If this distance is less than 0.8 times the angular sampling, the point is deleted
         This cares care of sampling points near the edge of the geometrical considerations
     */
-    void removeSymmetryEquivalentPoints(double max_ang);
+    void removeSymmetryEquivalentPoints(DOUBLE max_ang);
 
     /* eliminate symmetry-related points based on simple geometrical considerations,
         symmetry group, symmetry order */
     void removeSymmetryEquivalentPointsGeometric(const int symmetry, int sym_order,
-												 std::vector <Matrix1D<double> >  &sampling_points_vector);
+												 std::vector <Matrix1D<DOUBLE> >  &sampling_points_vector);
 
 
 

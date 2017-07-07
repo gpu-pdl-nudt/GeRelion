@@ -26,11 +26,11 @@
 #include "src/mask.h"
 #include "src/math_function.h"
 
-//extern __shared__ double smem_d[];
+//extern __shared__ DOUBLE smem_d[];
 
-static __global__ void softMaskOutsideMap_kernel(double*, double, double, double*, double , int , int, int , int , int, int);
+static __global__ void softMaskOutsideMap_kernel(DOUBLE*, DOUBLE, DOUBLE, DOUBLE*, DOUBLE , int , int, int , int , int, int);
 
-static __global__ void softMaskOutsideMap_kernel(double* vol, double radius, double cosine_width, double* Mnoise, double radius_p, int xdim, int ydim, int zdim, int xinit, int yinit, int zinit)
+static __global__ void softMaskOutsideMap_kernel(DOUBLE* vol, DOUBLE radius, DOUBLE cosine_width, DOUBLE* Mnoise, DOUBLE radius_p, int xdim, int ydim, int zdim, int xinit, int yinit, int zinit)
 {
 	int tid_x = threadIdx.x;
 	int tid_y = threadIdx.y;
@@ -41,9 +41,9 @@ static __global__ void softMaskOutsideMap_kernel(double* vol, double radius, dou
 	int nr_loops = (image_size + block_size - 1) / block_size;
 	long int kp, ip, jp;
 	offset = blockIdx.x * image_size;
-	double r, raisedcos;
-	__shared__ double sum_bg[BLOCK_SIZE];
-	__shared__ double sum[BLOCK_SIZE];
+	DOUBLE r, raisedcos;
+	__shared__ DOUBLE sum_bg[BLOCK_SIZE];
+	__shared__ DOUBLE sum[BLOCK_SIZE];
 	sum_bg[tid] = 0;
 	sum[tid] = 0;
 
@@ -56,7 +56,7 @@ static __global__ void softMaskOutsideMap_kernel(double* vol, double radius, dou
 				jp = ((tid % xdim) + xinit);
 				ip = ((tid / xdim) + yinit);
 				kp = 0;
-				r = sqrt((double)(kp * kp + ip * ip + jp * jp));
+				r = sqrt((DOUBLE)(kp * kp + ip * ip + jp * jp));
 
 				if (r < radius)
 					;
@@ -104,7 +104,7 @@ static __global__ void softMaskOutsideMap_kernel(double* vol, double radius, dou
 			jp = (tid % xdim + xinit);
 			ip = (tid / xdim) + yinit;
 			kp = (tid / (xdim * ydim) + zinit);
-			r = sqrt((double)(kp * kp + ip * ip + jp * jp));
+			r = sqrt((DOUBLE)(kp * kp + ip * ip + jp * jp));
 			if (r > radius_p && r >= radius)
 			{
 				vol[offset + (kp - zinit)*xdim * ydim + (ip - yinit)*xdim + (jp - xinit)] = (Mnoise == NULL) ? sum_bg[0] : Mnoise[offset + (kp - zinit) * xdim * ydim + (ip - yinit) * xdim + (jp - xinit)];
@@ -112,7 +112,7 @@ static __global__ void softMaskOutsideMap_kernel(double* vol, double radius, dou
 			else if (r <= radius_p && r >= radius)
 			{
 				raisedcos = 0.5 + 0.5 * cos(PI * (radius_p - r) / cosine_width);
-				double add = (Mnoise == NULL) ?  sum_bg[0] : Mnoise[offset + (kp - zinit) * xdim * ydim + (ip - yinit) * xdim + (jp - xinit)];
+				DOUBLE add = (Mnoise == NULL) ?  sum_bg[0] : Mnoise[offset + (kp - zinit) * xdim * ydim + (ip - yinit) * xdim + (jp - xinit)];
 				vol[offset + (kp - zinit)*xdim * ydim + (ip - yinit)*xdim + (jp - xinit)] = (1 - raisedcos) * vol[offset + (kp - zinit) * xdim * ydim + (ip - yinit) * xdim + (jp - xinit)] + raisedcos * add;
 			}
 		}
@@ -121,16 +121,16 @@ static __global__ void softMaskOutsideMap_kernel(double* vol, double radius, dou
 
 }
 template <typename T>
-void softMaskOutsideMap_gpu(T* vol, double radius, double cosine_width, T* Mnoise, int nr_images, int xdim, int ydim, int zdim)
+void softMaskOutsideMap_gpu(T* vol, DOUBLE radius, DOUBLE cosine_width, T* Mnoise, int nr_images, int xdim, int ydim, int zdim)
 {
 	int zinit = FIRST_XMIPP_INDEX(zdim);
 	int yinit = FIRST_XMIPP_INDEX(ydim);
 	int xinit = FIRST_XMIPP_INDEX(xdim);
 	//vol.setXmippOrigin();
-	double radius_p;
+	DOUBLE radius_p;
 	if (radius < 0)
 	{
-		radius = (double)xdim / 2.;
+		radius = (DOUBLE)xdim / 2.;
 	}
 	radius_p = radius + cosine_width;
 
@@ -139,7 +139,7 @@ void softMaskOutsideMap_gpu(T* vol, double radius, double cosine_width, T* Mnois
 	softMaskOutsideMap_kernel<<< gridDim, blockDim>>>(vol,  radius,  cosine_width, Mnoise, radius_p, xdim, ydim, zdim, xinit, yinit, zinit);
 }
 
-template void softMaskOutsideMap_gpu<double>(double* vol, double radius, double cosine_width, double* Mnoise, int nr_images, int xdim, int ydim, int zdim);
+template void softMaskOutsideMap_gpu<DOUBLE>(DOUBLE* vol, DOUBLE radius, DOUBLE cosine_width, DOUBLE* Mnoise, int nr_images, int xdim, int ydim, int zdim);
 
 
 
