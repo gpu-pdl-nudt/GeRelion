@@ -19,9 +19,9 @@ We integrated a new algorithm into GeRelion, named dynamic singal subtraction (D
 
 --red_mask (red_mask_file): User-provided mask for the wanted region. During DSS, GeRelion multiplies the 3D reconstruction from the last iteration with this mask to generate the reference map of the wanted region.  
 
---yellow_mask (yellow_mask_file): User-provided mask for the unwanted region. During DSS, GeRelion multiplies the 3D reconstruction from the last iteration with this mask to generate the reference map of the unwanted region, i.e. ¿yellow map¿. This yellow map is used to generate 2D projections, which are then subtracted from the original particle images. 
+--yellow_mask (yellow_mask_file): User-provided mask for the unwanted region. During DSS, GeRelion multiplies the 3D reconstruction from the last iteration with this mask to generate the reference map of the unwanted region, i.e. "yellow map". This yellow map is used to generate 2D projections, which are then subtracted from the original particle images. 
 
---yellow_map (yellow_map_file): User-provided ¿yellow map¿, which will be used in every iteration. When --yellow map is present, --yellow_mask is ignored. (The unwanted region often becomes weaker during iterative refinement, and thus contains not enough signal for subtraction. Therefore, it is often preferred to use a fixed ¿yellow_map¿ instead of a ¿yellow_mask¿ to generate ¿yellow_map¿ during iterations.)
+--yellow_map (yellow_map_file): User-provided "yellow map", which will be used in every iteration. When --yellow map is present, --yellow_mask is ignored. (The unwanted region often becomes weaker during iterative refinement, and thus contains not enough signal for subtraction. Therefore, it is often preferred to use a fixed "yellow_map" instead of a "yellow_mask" to generate "yellow_map" during iterations.)
 
 --extra_iter (0): Extra number of iterations to perform. GeRelion auto-refine iterates additional n cycles even after the convergence is achieved.
 
