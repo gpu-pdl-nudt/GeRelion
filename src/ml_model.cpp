@@ -717,7 +717,7 @@ void MlModel::setFourierTransformMaps(bool update_tau2_spectra, int nr_threads)
 void MlModel::setFourierTransformMaps_gpu(bool update_tau2_spectra, int nr_threads)
 {
 
-	if(do_yellow_red_mask)
+	if(do_yellow_red_mask||do_yellow_map_red_mask)
 	{
 		
 		for (int iclass = 0; iclass < nr_classes; iclass++)

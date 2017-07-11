@@ -496,6 +496,9 @@ void MlOptimiser::parseInitial(int argc, char** argv)
 	fn_yellow_mask = parser.getOption("--yellow_mask", "Yellow mask map", "");
 	fn_red_mask = parser.getOption("--red_mask", "Red mask map", "");
 	fn_fsc_mask = parser.getOption("--fsc_mask", "FSC mask map", "");
+	
+	mymodel.do_yellow_red_mask = (fn_red_mask != "" && fn_yellow_mask!="" );
+	mymodel.do_yellow_map_red_mask = (fn_red_mask != "" && fn_yellow_map!="" );
 	sub_extract = (fn_red_mask != "" && (fn_yellow_mask!=""||fn_yellow_map!="") );
 	
 	//mymodel.do_yellow_red_mask = (fn_red_mask != "" && fn_yellow_mask!="" );
