@@ -6585,8 +6585,8 @@ void MlOptimiser:: subYellowMK_gpu( DOUBLE *image_red_D)
 				
 		cudaError cu_error = cudaGetLastError();
 		int  f2d_x, f2d_y, data_x, data_y, data_z, data_starty, data_startz;
-		f2d_x = XSIZE(mymodel.yellow_mask())/2+1;//mymodel.Iref_yellow[0].xdim/2+1;
-		f2d_y = YSIZE(mymodel.yellow_mask());//mymodel.Iref_yellow[0].ydim;
+		f2d_x = mymodel.Iref_yellow[0].xdim/2+1;
+		f2d_y = mymodel.Iref_yellow[0].ydim;
 		int image_size;
 		image_size = f2d_x * f2d_y;
 		data_x = XSIZE(mymodel.PPref_yellow[0].data);
