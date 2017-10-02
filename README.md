@@ -14,8 +14,8 @@ and the flow control of progressive processing in the original RELION is kept.
 The _*.cu_ source files  and their corresponding header files in directory _src_ are developed by GeRelion team.
 The _*.cpp_ source files  and their corresponding header files in directory _src_ are from relion-1.3.
 Some of the _*.ccp_ and _*.hpp_ files from relion are modified by GeRelion team.
-
-We integrated a new algorithm into GeRelion, named __dynamic signal subtraction (DSS)__. The parameters required for DSS are --red_mask and --yellow_map (or --yellow_mask).
+ 
+We extended the original signal subtraction algorithm in GeRelion, named __dynamic signal subtraction (DSS)__. This procedure was originally proposed and tested in Relion (Nature 2015, 523:47). The parameters required for DSS are --red_mask and --yellow_map (or --yellow_mask).
 
 __--red_mask__ (red_mask_file): User-provided mask for the wanted region. During DSS, GeRelion multiplies the 3D reconstruction from the last iteration with this mask to generate the reference map of the wanted region.  
 
